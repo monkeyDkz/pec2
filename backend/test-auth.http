@@ -1,0 +1,205 @@
+###
+### Tests d'authentification - Payment Platform Backend
+### Backend sur Docker : http://localhost:3000
+### Frontend sur Docker : http://localhost:8080
+###
+
+### Variables Docker
+@baseUrl = http://localhost:3000
+@testEmail = test@example.com
+@testPassword = TestPassword123
+@testFirstName = John
+@testLastName = Doe
+
+### JWT Token (sera généré après connexion)
+@jwt_token = YOUR_JWT_TOKEN_HERE
+
+### 1. Vérification de l'état du serveur
+GET {{baseUrl}}/health
+Content-Type: application/json
+
+###
+
+### 2. Test des routes d'authentification
+GET {{baseUrl}}/api/auth/test
+Content-Type: application/json
+
+###
+
+### 3. Inscription d'un nouvel utilisateur
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "{{testFirstName}}",
+  "lastName": "{{testLastName}}",
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+###
+
+### 4. Inscription avec votre vrai email (pour recevoir l'email)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Kays",
+  "lastName": "Zahidi", 
+  "email": "kays.zahidi@gmail.com",
+  "password": "TestPassword123"
+}
+
+###
+
+### 5. Test de connexion AVANT vérification email (doit échouer)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+###
+
+### 6. Vérification d'email (utilisez le token reçu par email)
+POST {{baseUrl}}/api/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "REMPLACEZ_PAR_LE_TOKEN_RECU_PAR_EMAIL"
+}
+
+###
+
+### 7. Connexion APRÈS vérification email (doit réussir)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+###
+
+### 8. Renvoyer email de vérification
+POST {{baseUrl}}/api/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}"
+}
+
+###
+
+### 9. Obtenir le profil utilisateur (route protégée)
+GET {{baseUrl}}/api/auth/profile
+Authorization: Bearer {{jwt_token}}
+
+###
+
+### Tests d'erreurs ###
+
+### 10. Inscription avec mot de passe trop faible
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "weak@example.com",
+  "password": "123"
+}
+
+###
+
+### 11. Inscription avec email invalide
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "email-invalide",
+  "password": "TestPassword123"
+}
+
+###
+
+### 12. Connexion avec mauvais mot de passe
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "mauvais_mot_de_passe"
+}
+
+###
+
+### 13. Connexion avec email inexistant
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "inexistant@example.com",
+  "password": "TestPassword123"
+}
+
+###
+
+### 14. Vérification avec token invalide
+POST {{baseUrl}}/api/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "token_invalide_123"
+}
+
+###
+
+### 15. Route protégée sans token
+GET {{baseUrl}}/api/auth/profile
+
+###
+
+### 16. Route protégée avec token invalide
+GET {{baseUrl}}/api/auth/profile
+Authorization: Bearer token_invalide_123
+
+###
+
+### 17. Inscription avec email déjà utilisé
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "{{testEmail}}",
+  "password": "TestPassword123"
+}
+
+###
+
+### 18. Renvoyer vérification pour email inexistant
+POST {{baseUrl}}/api/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "inexistant@example.com"
+}
+
+###
+
+### 19. Renvoyer vérification pour email déjà vérifié
+POST {{baseUrl}}/api/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}"
+}
+
+###

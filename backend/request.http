@@ -1,0 +1,797 @@
+### ===============================
+### TESTS COMPLETS - WORKFLOW VALIDATION ADMIN
+### ===============================
+### Ce fichier teste TOUS les workflows de la plateforme
+
+### ===============================
+### 1. TESTS DE BASE
+### ===============================
+
+### 1.1 Test santé du serveur
+GET http://localhost:3000/health
+
+### 1.2 Test routes auth
+GET http://localhost:3000/api/auth/test
+
+### ===============================
+### 2. AUTHENTIFICATION - OBTENIR LES TOKENS
+### ===============================
+
+### 2.1 Connexion Admin
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@payment-platform.com",
+  "password": "AdminPassword123!"
+}
+
+### 2.2 Connexion Merchant 1 (Jean Dupont - TechShop)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "merchant1@example.com",
+  "password": "MerchantPass123!"
+}
+
+### 2.3 Connexion Merchant 2 (Marie Martin - CloudService)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "merchant2@example.com",
+  "password": "MerchantPass123!"
+}
+
+### 2.4 Connexion New User (Pierre Durand - Pour tests)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "UserPass123!"
+}
+
+### Variables JWT (À REMPLACER avec les vrais tokens obtenus ci-dessus)
+@admin_token = TOKEN_ADMIN_ICI
+@merchant1_token = TOKEN_MERCHANT1_ICI
+@merchant2_token = TOKEN_MERCHANT2_ICI
+@newuser_token = TOKEN_NEWUSER_ICI
+
+### ===============================
+### 3. WORKFLOW 1 : DEMANDE DE CRÉATION DE MARCHAND
+### ===============================
+
+### 3.1 Pierre fait une demande de création de marchand
+POST http://localhost:3000/api/merchants/create-request
+Authorization: Bearer {{newuser_token}}
+Content-Type: application/json
+
+{
+  "name": "Pierre's Gaming Store",
+  "description": "Boutique en ligne spécialisée dans les jeux vidéo et accessoires gaming",
+  "website_url": "https://pierres-gaming-store.com",
+  "business_type": "e-commerce",
+  "company_name": "Gaming Store SARL",
+  "company_address": "456 Rue des Gamers, 69000 Lyon, France",
+  "company_phone": "+33 4 78 90 12 34",
+  "company_email": "contact@pierres-gaming-store.com",
+  "siret": "78901234567890",
+  "webhook_url": "https://pierres-gaming-store.com/api/webhooks/payment"
+}
+
+### 3.2 Admin vérifie les nouvelles demandes
+GET http://localhost:3000/api/admin/merchant-requests
+Authorization: Bearer {{admin_token}}
+
+### 3.3 Admin vérifie le détail d'une demande spécifique (remplacer ID)
+GET http://localhost:3000/api/admin/merchant-requests/ID_DEMANDE_ICI
+Authorization: Bearer {{admin_token}}
+
+### 3.4 Admin APPROUVE la demande de création (remplacer ID)
+POST http://localhost:3000/api/admin/merchant-requests/ID_DEMANDE_ICI/approve
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "notes": "Demande approuvée - documents vérifiés, entreprise valide"
+}
+
+### 3.5 Vérifier que le marchand a été créé
+GET http://localhost:3000/api/admin/merchants
+Authorization: Bearer {{admin_token}}
+
+### ===============================
+### 4. WORKFLOW 2 : DEMANDE D'ADHÉSION À UN MARCHAND
+### ===============================
+
+### 4.1 Créer un nouvel utilisateur pour test d'adhésion
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Sophie",
+  "lastName": "Développeuse",
+  "email": "sophie.dev@example.com",
+  "password": "SophiePassword123!"
+}
+
+### 4.2 Connexion du nouvel utilisateur
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "sophie.dev@example.com",
+  "password": "SophiePassword123!"
+}
+
+### Variable pour Sophie
+@sophie_token = TOKEN_SOPHIE_ICI
+
+### 4.3 Sophie consulte les marchands disponibles
+GET http://localhost:3000/api/merchants/available
+Authorization: Bearer {{sophie_token}}
+
+### 4.4 Sophie fait une demande pour rejoindre TechShop
+POST http://localhost:3000/api/merchants/join-request
+Authorization: Bearer {{sophie_token}}
+Content-Type: application/json
+
+{
+  "merchantId": "5a008fce-727d-4a9e-8b13-c26fbaad66e2",
+  "requestedRole": "developer",
+  "justification": "Je suis développeuse full-stack avec 5 ans d'expérience en e-commerce. Je maîtrise les APIs de paiement et souhaite contribuer au développement de TechShop."
+}
+
+### 4.5 Admin voit la nouvelle demande d'adhésion
+GET http://localhost:3000/api/admin/merchant-requests?status=pending
+Authorization: Bearer {{admin_token}}
+
+### 4.6 Admin APPROUVE la demande d'adhésion (remplacer ID)
+POST http://localhost:3000/api/admin/merchant-requests/ID_DEMANDE_ADHESION_ICI/approve
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "notes": "Profil développeur validé, expérience pertinente confirmée"
+}
+
+### ===============================
+### 5. WORKFLOW 3 : GESTION POST-VALIDATION
+### ===============================
+
+### 5.1 Pierre vérifie ses marchands après validation
+GET http://localhost:3000/api/merchants
+Authorization: Bearer {{newuser_token}}
+
+### 5.2 Sophie vérifie ses marchands après adhésion
+GET http://localhost:3000/api/merchants
+Authorization: Bearer {{sophie_token}}
+
+### 5.3 Jean (admin TechShop) voit les nouveaux membres
+GET http://localhost:3000/api/merchants/5a008fce-727d-4a9e-8b13-c26fbaad66e2/members
+Authorization: Bearer {{merchant1_token}}
+
+### 5.4 Sophie accède aux détails de TechShop
+GET http://localhost:3000/api/merchants/5a008fce-727d-4a9e-8b13-c26fbaad66e2/details
+Authorization: Bearer {{sophie_token}}
+
+### ===============================
+### 6. WORKFLOW 4 : TESTS DE REJET
+### ===============================
+
+### 6.1 Créer un utilisateur pour test de rejet
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Malveillant",
+  "lastName": "Utilisateur",
+  "email": "malveillant@example.com",
+  "password": "MalveillantPass123!"
+}
+
+### 6.2 Connexion utilisateur malveillant
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "malveillant@example.com",
+  "password": "MalveillantPass123!"
+}
+
+### Variable malveillant
+@malveillant_token = TOKEN_MALVEILLANT_ICI
+
+### 6.3 Demande de création douteuse
+POST http://localhost:3000/api/merchants/create-request
+Authorization: Bearer {{malveillant_token}}
+Content-Type: application/json
+
+{
+  "name": "Site Douteux",
+  "description": "Activité non claire",
+  "website_url": "https://site-douteux.com",
+  "business_type": "other",
+  "company_name": "Société Fictive",
+  "company_address": "Adresse incomplète",
+  "company_phone": "0123456789",
+  "company_email": "fake@fake.com",
+  "siret": "00000000000000",
+  "webhook_url": "https://site-douteux.com/webhook"
+}
+
+### 6.4 Admin REJETTE la demande douteuse (remplacer ID)
+POST http://localhost:3000/api/admin/merchant-requests/ID_DEMANDE_DOUTEUSE_ICI/reject
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "reason": "Informations incomplètes et non vérifiables",
+  "notes": "SIRET invalide, adresse incomplète, activité non claire"
+}
+
+### ===============================
+### 7. TESTS DE SÉCURITÉ ET PERMISSIONS
+### ===============================
+
+### 7.1 Tentative d'accès admin avec token merchant (DOIT ÉCHOUER)
+GET http://localhost:3000/api/admin/merchants
+Authorization: Bearer {{merchant1_token}}
+
+### 7.2 Tentative d'accès marchand sans autorisation (DOIT ÉCHOUER)
+GET http://localhost:3000/api/merchants/e63467c4-6414-4876-8e4a-9dbc23ae3141/details
+Authorization: Bearer {{merchant1_token}}
+
+### 7.3 Tentative de modification de marchand par developer (DOIT ÉCHOUER)
+PUT http://localhost:3000/api/merchants/5a008fce-727d-4a9e-8b13-c26fbaad66e2/settings
+Authorization: Bearer {{sophie_token}}
+Content-Type: application/json
+
+{
+  "webhook_url": "https://hack-attempt.com"
+}
+
+### ===============================
+### 8. TESTS DE GESTION AVANCÉE
+### ===============================
+
+### 8.1 Admin consulte tous les utilisateurs
+GET http://localhost:3000/api/admin/users
+Authorization: Bearer {{admin_token}}
+
+### 8.2 Admin suspend un marchand
+POST http://localhost:3000/api/admin/merchants/ID_MARCHAND_ICI/suspend
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "reason": "Activité suspecte détectée",
+  "notes": "Suspension temporaire pour vérification"
+}
+
+### 8.3 Admin réactive un marchand
+POST http://localhost:3000/api/admin/merchants/ID_MARCHAND_ICI/activate
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "notes": "Vérifications terminées, réactivation autorisée"
+}
+
+### ===============================
+### 9. TESTS DE CONSULTATION ET STATISTIQUES
+### ===============================
+
+### 9.1 Pierre consulte ses demandes
+GET http://localhost:3000/api/merchants/my-requests
+Authorization: Bearer {{newuser_token}}
+
+### 9.2 Admin consulte le détail d'un marchand
+GET http://localhost:3000/api/admin/merchants/5a008fce-727d-4a9e-8b13-c26fbaad66e2
+Authorization: Bearer {{admin_token}}
+
+### 9.3 Consultation du profil utilisateur
+GET http://localhost:3000/api/auth/profile
+Authorization: Bearer {{sophie_token}}
+
+### ===============================
+### 10. TESTS D'ERREURS ET EDGE CASES
+### ===============================
+
+### 10.1 Demande avec données manquantes (DOIT ÉCHOUER)
+POST http://localhost:3000/api/merchants/create-request
+Authorization: Bearer {{newuser_token}}
+Content-Type: application/json
+
+{
+  "name": "Marchand Incomplet"
+}
+
+### 10.2 Adhésion à marchand inexistant (DOIT ÉCHOUER)
+POST http://localhost:3000/api/merchants/join-request
+Authorization: Bearer {{sophie_token}}
+Content-Type: application/json
+
+{
+  "merchantId": "00000000-0000-0000-0000-000000000000",
+  "requestedRole": "developer",
+  "justification": "Test"
+}
+
+### 10.3 Accès sans token (DOIT ÉCHOUER)
+GET http://localhost:3000/api/merchants
+
+### ===============================
+### 🎯 INSTRUCTIONS D'UTILISATION
+### ===============================
+### 1. Exécuter les connexions (section 2) pour obtenir les tokens
+### 2. Remplacer les variables @token par les vrais tokens
+### 3. Exécuter les workflows dans l'ordre
+### 4. Vérifier les réponses et ajuster les IDs selon les retours
+### 5. Tester tous les cas d'erreur pour valider la sécurité
+
+### 13. Faire une demande d'adhésion à un marchand (NewUser)
+POST http://localhost:3000/api/merchants/e63467c4-6414-4876-8e4a-9dbc23ae3141/request-join
+Authorization: Bearer {{newuser_token}}
+Content-Type: application/json
+
+{
+  "requested_role": "developer",
+  "justification": "Je souhaite rejoindre CloudService Pro en tant que développeur. J'ai une forte expérience en intégration de systèmes de paiement."
+}
+
+### 14. Lister les membres d'un marchand (Merchant2 - CloudService Pro)
+GET http://localhost:3000/api/merchants/e63467c4-6414-4876-8e4a-9dbc23ae3141/members
+Authorization: Bearer {{merchant2_token}}
+
+### 15. Obtenir le profil utilisateur (route protégée)
+GET http://localhost:3000/api/auth/profile
+Authorization: Bearer {{merchant1_token}}
+
+### ===============================
+### GESTION DES DEMANDES (Admin)
+### ===============================
+
+### 16. Approuver une demande d'adhésion (Admin)
+POST http://localhost:3000/api/admin/requests/241d73cd-80d3-4a67-a92c-0c94d40b4ce3/approve
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "notes": "Demande approuvée, profil compatible avec les besoins"
+}
+
+### 17. Lister les utilisateurs (Admin)
+GET http://localhost:3000/api/admin/users
+Authorization: Bearer {{admin_token}}
+
+### ===============================
+### TESTS D'ERREURS ET SÉCURITÉ
+### ===============================
+
+### 18. Tentative d'accès admin sans token admin (doit échouer)
+GET http://localhost:3000/api/admin/merchants
+Authorization: Bearer {{merchant1_token}}
+
+### 19. Tentative d'accès à un marchand non autorisé (doit échouer)
+GET http://localhost:3000/api/merchants/e63467c4-6414-4876-8e4a-9dbc23ae3141
+Authorization: Bearer {{merchant1_token}}
+
+### 20. Test route inexistante
+GET http://localhost:3000/api/inexistant
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Kays",
+  "lastName": "Zahidi",
+  "email": "kays.zahidi@gmail.com",
+  "password": "TestPassword123"
+}
+
+### Connexion avec l'utilisateur réel
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "kays.zahidi@gmail.com",
+  "password": "TestPassword123"
+}
+
+### Test d'inscription avec données invalides (mot de passe trop court)
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "test@example.com",
+  "password": "123"
+}
+
+### Test d'inscription avec email invalide
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "email-invalide",
+  "password": "TestPassword123"
+}
+
+### Test de connexion avec mauvais identifiants
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "mauvais_mot_de_passe"
+}
+
+### Test de route protégée sans token
+GET http://localhost:3000/api/auth/profile
+
+### Test avec token invalide
+GET http://localhost:3000/api/auth/profile
+Authorization: Bearer token_invalide_123
+
+### ===============================
+### 10. TESTS API PAIEMENT - TRANSACTIONS
+### ===============================
+
+### 10.1 Variables pour les tests
+@admin_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MWZlNzIyMS0wODliLTQ1NzItODNjZC0yMzE5M2MzYmI4YjIiLCJpYXQiOjE3MjE0MDEwNjYsImV4cCI6MTcyMTQ4NzQ2Nn0.xyz
+@merchant1_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5MWZlNzIyMS0wODliLTQ1NzItODNjZC0yMzE5M2MzYmI4YjIiLCJpYXQiOjE3MjE0MDEwNjYsImV4cCI6MTcyMTQ4NzQ2Nn0.xyz
+
+### IMPORTANT: Récupérer les credentials API d'un marchand actif
+GET http://localhost:3000/api/merchants/my-merchants
+Authorization: Bearer {{merchant1_token}}
+
+### Variables API Key (à remplacer par les vraies valeurs)
+@api_id = MERCHANT_APP_ID_HERE
+@api_secret = MERCHANT_APP_SECRET_HERE
+
+### ===============================
+### 10.2 CRÉATION DE TRANSACTIONS
+### ===============================
+
+### Créer une transaction valide
+POST http://localhost:3000/api/transactions
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "order_id": "ORDER_2025_001",
+  "amount": 99.99,
+  "currency": "EUR",
+  "description": "Achat produit test",
+  "customer_email": "client@example.com",
+  "customer_first_name": "Jean",
+  "customer_last_name": "Client",
+  "billing_address": {
+    "street": "123 rue de la Paix",
+    "city": "Paris",
+    "postal_code": "75001",
+    "country": "FR"
+  },
+  "success_url": "https://merchant-site.com/success",
+  "cancel_url": "https://merchant-site.com/cancel",
+  "webhook_url": "https://merchant-site.com/webhook",
+  "metadata": {
+    "order_type": "test",
+    "campaign_id": "SUMMER2025"
+  }
+}
+
+### Créer une transaction minimale
+POST http://localhost:3000/api/transactions
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "order_id": "ORDER_2025_002",
+  "amount": 25.50,
+  "customer_email": "simple@example.com",
+  "success_url": "https://merchant-site.com/success",
+  "cancel_url": "https://merchant-site.com/cancel"
+}
+
+### Test transaction avec données invalides (montant négatif)
+POST http://localhost:3000/api/transactions
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "order_id": "ORDER_INVALID",
+  "amount": -10.00,
+  "customer_email": "invalid@example.com",
+  "success_url": "https://merchant-site.com/success",
+  "cancel_url": "https://merchant-site.com/cancel"
+}
+
+### Test sans credentials API
+POST http://localhost:3000/api/transactions
+Content-Type: application/json
+
+{
+  "order_id": "ORDER_NO_AUTH",
+  "amount": 50.00,
+  "customer_email": "noauth@example.com",
+  "success_url": "https://merchant-site.com/success",
+  "cancel_url": "https://merchant-site.com/cancel"
+}
+
+### ===============================
+### 10.3 CONSULTATION DES TRANSACTIONS
+### ===============================
+
+### Variables transaction (à remplacer par un vrai ID)
+@transaction_id = TRANSACTION_ID_HERE
+
+### Obtenir une transaction spécifique
+GET http://localhost:3000/api/transactions/{{transaction_id}}
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Lister toutes les transactions du marchand
+GET http://localhost:3000/api/transactions
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Lister avec filtres
+GET http://localhost:3000/api/transactions?status=pending&page=1&limit=10
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### ===============================
+### 10.4 TRAITEMENT DE PAIEMENT (PAGE DE PAIEMENT)
+### ===============================
+
+### Variables pour paiement (à récupérer depuis la transaction créée)
+@payment_token = PAYMENT_TOKEN_HERE
+
+### Traiter un paiement par carte
+POST http://localhost:3000/api/transactions/{{transaction_id}}/process
+Content-Type: application/json
+
+{
+  "token": "{{payment_token}}",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4111111111111111",
+    "expiry_month": 12,
+    "expiry_year": 2027,
+    "cvv": "123",
+    "cardholder_name": "Jean Client"
+  }
+}
+
+### Annuler une transaction
+POST http://localhost:3000/api/transactions/{{transaction_id}}/cancel
+Content-Type: application/json
+
+{
+  "token": "{{payment_token}}"
+}
+
+### Test paiement avec token invalide
+POST http://localhost:3000/api/transactions/{{transaction_id}}/process
+Content-Type: application/json
+
+{
+  "token": "invalid_token",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4111111111111111",
+    "expiry_month": 12,
+    "expiry_year": 2027,
+    "cvv": "123",
+    "cardholder_name": "Jean Client"
+  }
+}
+
+### ===============================
+### 10.5 OPÉRATIONS - REMBOURSEMENTS
+### ===============================
+
+### Variables operation (récupérée depuis une transaction payée)
+@paid_transaction_id = PAID_TRANSACTION_ID_HERE
+
+### Remboursement total
+POST http://localhost:3000/api/transactions/{{paid_transaction_id}}/refund
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "reason": "Remboursement total demandé par le client",
+  "metadata": {
+    "refund_type": "customer_request",
+    "support_ticket": "TICKET_001"
+  }
+}
+
+### Remboursement partiel
+POST http://localhost:3000/api/transactions/{{paid_transaction_id}}/refund
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "amount": 25.00,
+  "reason": "Remboursement partiel - article défectueux",
+  "metadata": {
+    "refund_type": "partial",
+    "item_id": "ITEM_123"
+  }
+}
+
+### Lister toutes les opérations
+GET http://localhost:3000/api/operations
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Lister les opérations d'une transaction
+GET http://localhost:3000/api/transactions/{{transaction_id}}/operations
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Obtenir les stats des opérations
+GET http://localhost:3000/api/operations/stats/summary
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### ===============================
+### 10.6 WEBHOOKS - GESTION
+### ===============================
+
+### Lister les webhooks du marchand
+GET http://localhost:3000/api/webhooks
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Lister avec filtres
+GET http://localhost:3000/api/webhooks?status=pending&event_type=transaction.success
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Variables webhook (à remplacer par un vrai ID)
+@webhook_id = WEBHOOK_ID_HERE
+
+### Réessayer un webhook
+POST http://localhost:3000/api/webhooks/{{webhook_id}}/retry
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### Obtenir les stats des webhooks
+GET http://localhost:3000/api/webhooks/stats/summary
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+### ===============================
+### 10.7 SIMULATION PSP WEBHOOK (À TESTER MANUELLEMENT)
+### ===============================
+
+### Simuler une notification PSP (success)
+POST http://localhost:3000/api/webhooks/psp
+Content-Type: application/json
+X-PSP-Signature: CALCULATED_SIGNATURE_HERE
+
+{
+  "operation_id": "{{operation_id}}",
+  "transaction_id": "{{transaction_id}}",
+  "status": "success",
+  "psp_reference": "PSP_REF_123456",
+  "psp_transaction_id": "TXN_PSP_789",
+  "data": {
+    "card_last4": "1111",
+    "authorization_code": "AUTH123",
+    "processor_response": "APPROVED"
+  }
+}
+
+### Simuler une notification PSP (failed)
+POST http://localhost:3000/api/webhooks/psp
+Content-Type: application/json
+X-PSP-Signature: CALCULATED_SIGNATURE_HERE
+
+{
+  "operation_id": "{{operation_id}}",
+  "transaction_id": "{{transaction_id}}",
+  "status": "failed",
+  "error_message": "Insufficient funds",
+  "error_code": "INSUFFICIENT_FUNDS",
+  "data": {
+    "decline_reason": "Insufficient funds"
+  }
+}
+
+### ===============================
+### 10.8 BACKOFFICE - INTERFACE ADMIN
+### ===============================
+
+### Lister toutes les transactions (admin)
+GET http://localhost:3000/api/transactions/backoffice/list
+Authorization: Bearer {{admin_token}}
+
+### Voir une transaction (admin)
+GET http://localhost:3000/api/transactions/backoffice/{{transaction_id}}
+Authorization: Bearer {{admin_token}}
+
+### Réessayer tous les webhooks en échec (admin)
+POST http://localhost:3000/api/webhooks/backoffice/retry-failed
+Authorization: Bearer {{admin_token}}
+
+### ===============================
+### 10.9 TESTS DE SÉCURITÉ - API PAIEMENT
+### ===============================
+
+### Test avec mauvaise API Key
+GET http://localhost:3000/api/transactions
+X-API-ID: INVALID_APP_ID
+X-API-SECRET: INVALID_SECRET
+
+### Test sans headers d'authentification
+GET http://localhost:3000/api/transactions
+
+### Test accès transaction d'un autre marchand
+GET http://localhost:3000/api/transactions/{{transaction_id}}
+X-API-ID: OTHER_MERCHANT_APP_ID
+X-API-SECRET: OTHER_MERCHANT_SECRET
+
+### ===============================
+### 10.10 TESTS DE EDGE CASES
+### ===============================
+
+### Traiter paiement sur transaction expirée
+POST http://localhost:3000/api/transactions/{{transaction_id}}/process
+Content-Type: application/json
+
+{
+  "token": "{{payment_token}}",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4111111111111111",
+    "expiry_month": 12,
+    "expiry_year": 2027,
+    "cvv": "123",
+    "cardholder_name": "Jean Client"
+  }
+}
+
+### Remboursement sur transaction non payée
+POST http://localhost:3000/api/transactions/{{transaction_id}}/refund
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "reason": "Test remboursement invalide"
+}
+
+### Remboursement dépassant le montant disponible
+POST http://localhost:3000/api/transactions/{{paid_transaction_id}}/refund
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "amount": 999999.99,
+  "reason": "Test montant excessif"
+}
+
+### Double remboursement total
+POST http://localhost:3000/api/transactions/{{paid_transaction_id}}/refund
+Content-Type: application/json
+X-API-ID: {{api_id}}
+X-API-SECRET: {{api_secret}}
+
+{
+  "reason": "Deuxième remboursement total (doit échouer)"
+}

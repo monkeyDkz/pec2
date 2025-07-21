@@ -1,0 +1,31 @@
+{
+  "name": "payment-platform-frontend",
+  "version": "1.0.0",
+  "description": "Interface utilisateur plateforme de paiement",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test": "vue-cli-service test:unit",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.4.2",
+    "axios": "^1.5.0",
+    "chart.js": "^4.3.3",
+    "moment": "^2.29.4",
+    "vue": "^3.3.4",
+    "vue-chartjs": "^5.2.0",
+    "vue-router": "^4.2.4",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-eslint": "^5.0.8",
+    "@vue/cli-plugin-router": "^5.0.8",
+    "@vue/cli-service": "^5.0.8",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.45.0",
+    "eslint-plugin-vue": "^9.15.1",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5"
+  }
+}

@@ -1,0 +1,451 @@
+### ===============================================
+### TESTS COMPLETS - WORKFLOW DE PAIEMENT PSP
+### ===============================================
+### 🎯 Tous les workflows : Synchrone + Asynchrone + PSP
+### 📧 Incluant création, paiement, refus, refunds, webhooks
+
+### ===============================================
+### VARIABLES GLOBALES
+### ===============================================
+@baseUrl = http://localhost:3000
+@pspUrl = http://localhost:3002
+
+# Credentials API déjà configurés (voir README.md)
+@techShopApiKey = tech_shop_api_key_123456789abcdef
+@techShopApiSecret = tech_shop_api_secret_987654321fedcba0123456789abcdef
+@cloudServiceApiKey = cloud_service_api_key_abcdef123456789
+@cloudServiceApiSecret = cloud_service_api_secret_fedcba0987654321abcdef123456789
+
+### ===============================================
+### 1. SANTÉ DES SERVICES
+### ===============================================
+
+### 1.1 Backend Principal
+GET {{baseUrl}}/health
+
+### 1.2 PSP Émulateur
+GET {{pspUrl}}/health
+
+### 1.3 API Payment Health
+GET {{pspUrl}}/api/payment/health
+
+### ===============================================
+### 2. AUTHENTIFICATION (pour les tests admin)
+### ===============================================
+
+### 2.1 Connexion Admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@payment-platform.com",
+  "password": "AdminPassword123!"
+}
+
+### ===============================================
+### 3. API PAIEMENT - WORKFLOW SYNCHRONE
+### ===============================================
+
+### 3.1 Créer une transaction (TechShop)
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "order_id": "ORDER_SYNC_001",
+  "amount": "99.99",
+  "currency": "EUR",
+  "description": "Produit de test synchrone",
+  "customer_email": "customer@example.com",
+  "customer_first_name": "Jean",
+  "customer_last_name": "Client",
+  "success_url": "https://techshop.example/success",
+  "cancel_url": "https://techshop.example/cancel",
+  "webhook_url": "https://techshop.example/webhook",
+  "metadata": {
+    "product_id": "SYNC_PROD_001",
+    "user_id": "USER_12345"
+  }
+}
+
+### 3.2 Lister les transactions (TechShop)
+GET {{baseUrl}}/api/transactions
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 3.3 Détails d'une transaction spécifique
+# Remplacer {transaction_id} par l'ID obtenu à l'étape 3.1
+GET {{baseUrl}}/api/transactions/{transaction_id}
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### ===============================================
+### 4. WORKFLOW ASYNCHRONE - PAIEMENT AVEC PSP
+### ===============================================
+
+### 4.1 Simulation de page de paiement - SUCCÈS
+# Utiliser l'ID et token de la transaction créée en 3.1
+POST {{baseUrl}}/api/transactions/{transaction_id}/payment
+Content-Type: application/json
+
+{
+  "token": "{payment_token}",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4000000000000000",
+    "card_expiry": "12/25",
+    "card_cvv": "123",
+    "card_holder": "Jean Client"
+  }
+}
+
+### 4.2 Simulation paiement - CARTE REFUSÉE
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "order_id": "ORDER_DECLINED_001",
+  "amount": "149.99",
+  "currency": "EUR",
+  "description": "Test carte refusée",
+  "customer_email": "test@example.com",
+  "customer_first_name": "Test",
+  "customer_last_name": "Declined",
+  "success_url": "https://techshop.example/success",
+  "cancel_url": "https://techshop.example/cancel"
+}
+
+### 4.3 Paiement avec carte refusée
+POST {{baseUrl}}/api/transactions/{transaction_id_declined}/payment
+Content-Type: application/json
+
+{
+  "token": "{payment_token_declined}",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4000000000000002",
+    "card_expiry": "12/25",
+    "card_cvv": "123",
+    "card_holder": "Test Declined"
+  }
+}
+
+### 4.4 Simulation paiement - FONDS INSUFFISANTS
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "order_id": "ORDER_INSUFFICIENT_001",
+  "amount": "99.99",
+  "currency": "EUR",
+  "description": "Test fonds insuffisants",
+  "customer_email": "insufficient@example.com",
+  "customer_first_name": "Test",
+  "customer_last_name": "Insufficient",
+  "success_url": "https://techshop.example/success",
+  "cancel_url": "https://techshop.example/cancel"
+}
+
+### 4.5 Paiement avec fonds insuffisants
+POST {{baseUrl}}/api/transactions/{transaction_id_insufficient}/payment
+Content-Type: application/json
+
+{
+  "token": "{payment_token_insufficient}",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4000000000000119",
+    "card_expiry": "12/25",
+    "card_cvv": "123",
+    "card_holder": "Test Insufficient"
+  }
+}
+
+### ===============================================
+### 5. GESTION DES REMBOURSEMENTS
+### ===============================================
+
+### 5.1 Remboursement partiel
+# Utiliser l'ID d'une transaction payée avec succès
+POST {{baseUrl}}/api/transactions/{transaction_id_success}/operations/refund
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "amount": "29.99",
+  "reason": "Remboursement partiel - article endommagé",
+  "metadata": {
+    "refund_type": "partial",
+    "support_ticket": "TICKET_12345"
+  }
+}
+
+### 5.2 Remboursement total
+POST {{baseUrl}}/api/transactions/{transaction_id_success}/operations/refund
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "reason": "Remboursement total - commande annulée",
+  "metadata": {
+    "refund_type": "full",
+    "reason_code": "CUSTOMER_REQUEST"
+  }
+}
+
+### ===============================================
+### 6. CONSULTATION DES OPÉRATIONS
+### ===============================================
+
+### 6.1 Lister toutes les opérations (TechShop)
+GET {{baseUrl}}/api/operations
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 6.2 Filtrer les opérations par type
+GET {{baseUrl}}/api/operations?type=refund&status=completed
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 6.3 Détails d'une opération
+GET {{baseUrl}}/api/operations/{operation_id}
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### ===============================================
+### 7. GESTION DES WEBHOOKS
+### ===============================================
+
+### 7.1 Lister les webhooks envoyés
+GET {{baseUrl}}/api/webhooks
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 7.2 Réessayer un webhook échoué
+POST {{baseUrl}}/api/webhooks/{webhook_id}/retry
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 7.3 Historique des webhooks PSP (debug)
+GET {{pspUrl}}/api/webhook/history
+
+### ===============================================
+### 8. TESTS DE SÉCURITÉ
+### ===============================================
+
+### 8.1 Test sans API Key
+GET {{baseUrl}}/api/transactions
+
+### 8.2 Test avec API Key invalide
+GET {{baseUrl}}/api/transactions
+X-API-ID: invalid_key
+X-API-SECRET: invalid_secret
+
+### 8.3 Test accès transaction d'un autre marchand
+GET {{baseUrl}}/api/transactions/{transaction_id}
+X-API-ID: {{cloudServiceApiKey}}
+X-API-SECRET: {{cloudServiceApiSecret}}
+
+### 8.4 Test création avec montant négatif
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "order_id": "ORDER_NEGATIVE_001",
+  "amount": "-99.99",
+  "currency": "EUR",
+  "description": "Test montant négatif",
+  "customer_email": "test@example.com",
+  "customer_first_name": "Test",
+  "customer_last_name": "Negative",
+  "success_url": "https://techshop.example/success",
+  "cancel_url": "https://techshop.example/cancel"
+}
+
+### ===============================================
+### 9. TESTS DE LIMITES ET EDGE CASES
+### ===============================================
+
+### 9.1 Transaction avec très gros montant
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "order_id": "ORDER_BIG_001",
+  "amount": "9999999.99",
+  "currency": "EUR",
+  "description": "Test gros montant",
+  "customer_email": "bigorder@example.com",
+  "customer_first_name": "Big",
+  "customer_last_name": "Order",
+  "success_url": "https://techshop.example/success",
+  "cancel_url": "https://techshop.example/cancel"
+}
+
+### 9.2 Transaction avec caractères spéciaux
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+{
+  "order_id": "ORDER_SPECIAL_001",
+  "amount": "19.99",
+  "currency": "EUR",
+  "description": "Test 特殊字符 & émojis 🚀",
+  "customer_email": "special@example.com",
+  "customer_first_name": "François",
+  "customer_last_name": "Müller-Schmidt",
+  "success_url": "https://techshop.example/success",
+  "cancel_url": "https://techshop.example/cancel",
+  "metadata": {
+    "special_chars": "éàèùç & 中文 & русский",
+    "emoji": "🎉✨🔥"
+  }
+}
+
+### 9.3 Annulation de transaction (timeout simulé)
+POST {{baseUrl}}/api/transactions/{transaction_id}/cancel
+Content-Type: application/json
+
+{
+  "token": "{payment_token}",
+  "reason": "Timeout - client n'a pas payé"
+}
+
+### ===============================================
+### 10. TESTS MULTI-MARCHANDS
+### ===============================================
+
+### 10.1 Transaction CloudService Pro
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+X-API-ID: {{cloudServiceApiKey}}
+X-API-SECRET: {{cloudServiceApiSecret}}
+
+{
+  "order_id": "CLOUD_ORDER_001",
+  "amount": "299.99",
+  "currency": "EUR",
+  "description": "Abonnement Cloud Pro",
+  "customer_email": "enterprise@company.com",
+  "customer_first_name": "Enterprise",
+  "customer_last_name": "Customer",
+  "success_url": "https://cloudservice.example/success",
+  "cancel_url": "https://cloudservice.example/cancel",
+  "webhook_url": "https://cloudservice.example/webhook",
+  "metadata": {
+    "subscription_type": "pro",
+    "billing_cycle": "monthly"
+  }
+}
+
+### 10.2 Lister transactions CloudService
+GET {{baseUrl}}/api/transactions
+X-API-ID: {{cloudServiceApiKey}}
+X-API-SECRET: {{cloudServiceApiSecret}}
+
+### ===============================================
+### 11. TESTS DIRECTS PSP (pour debug)
+### ===============================================
+
+### 11.1 Test direct capture PSP
+POST {{pspUrl}}/api/payment/process
+Content-Type: application/json
+
+{
+  "operation_id": "TEST_OP_001",
+  "transaction_id": "TEST_TXN_001",
+  "amount": "50.00",
+  "currency": "EUR",
+  "payment_method": {
+    "type": "card",
+    "card_number": "4000000000000000",
+    "card_expiry": "12/25",
+    "card_cvv": "123"
+  },
+  "customer": {
+    "email": "test@example.com",
+    "first_name": "Test",
+    "last_name": "Direct"
+  },
+  "callback_url": "http://localhost:3000/api/webhooks/psp-notification"
+}
+
+### 11.2 Test direct refund PSP
+POST {{pspUrl}}/api/payment/refund
+Content-Type: application/json
+
+{
+  "operation_id": "TEST_REFUND_001",
+  "transaction_id": "TEST_TXN_001",
+  "capture_reference": "PSP_12345_ABC123",
+  "refund_amount": "25.00",
+  "currency": "EUR",
+  "reason": "Test refund",
+  "callback_url": "http://localhost:3000/api/webhooks/psp-notification"
+}
+
+### ===============================================
+### 12. VÉRIFICATIONS FINALES
+### ===============================================
+
+### 12.1 Statistiques globales TechShop
+GET {{baseUrl}}/api/transactions?page=1&limit=100
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 12.2 Toutes les opérations TechShop
+GET {{baseUrl}}/api/operations?page=1&limit=100
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### 12.3 Tous les webhooks TechShop
+GET {{baseUrl}}/api/webhooks?page=1&limit=100
+X-API-ID: {{techShopApiKey}}
+X-API-SECRET: {{techShopApiSecret}}
+
+### ===============================================
+### 📝 INSTRUCTIONS D'UTILISATION
+### ===============================================
+### 
+### 1. Démarrer l'environnement :
+###    docker-compose up -d
+###
+### 2. Attendre que tous les services soient prêts (30s)
+###
+### 3. Exécuter les tests dans l'ordre :
+###    - Section 1-2 : Tests de base
+###    - Section 3 : Créer des transactions
+###    - Section 4 : Simuler des paiements
+###    - Section 5-6 : Remboursements et consultations
+###    - Section 7-8 : Webhooks et sécurité
+###    - Section 9-10 : Edge cases et multi-marchands
+###
+### 4. Notes importantes :
+###    - Remplacer {transaction_id} par les vrais IDs
+###    - Remplacer {payment_token} par les vrais tokens
+###    - Observer les logs PSP : docker-compose logs -f psp-emulator
+###    - Observer les logs backend : docker-compose logs -f backend
+###
+### 5. Vérifications attendues :
+###    ✅ Créations de transactions
+###    ✅ Paiements réussis avec notification asynchrone
+###    ✅ Rejets de cartes (différents codes d'erreur)
+###    ✅ Remboursements partiels et totaux
+###    ✅ Webhooks envoyés aux marchands
+###    ✅ Sécurité et contrôles d'accès
+###    ✅ Traçabilité complète des opérations
+###
+### ===============================================

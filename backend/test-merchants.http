@@ -1,0 +1,240 @@
+###
+### Tests de gestion des marchands - Payment Platform Backend
+### Backend sur Docker : http://localhost:3000
+###
+
+### Variables
+@baseUrl = http://localhost:3000
+@adminEmail = admin@payment-platform.com
+@adminPassword = AdminPassword123!
+@newUserEmail = newuser@example.com
+@newUserPassword = UserPass123!
+
+### JWT Tokens (à remplacer après connexion)
+@admin_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImVtYWlsIjoiYWRtaW5AcGF5bWVudC1wbGF0Zm9ybS5jb20iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NTI5MzUzNjIsImV4cCI6MTc1MzAyMTc2Mn0.oPL3tbF-sW4r3Du8XMaj5mU6pt1BDv4TUfOLUARurwg
+@user_token = YOUR_USER_TOKEN_HERE
+
+### ================================
+### 1. AUTHENTIFICATION ADMIN
+### ================================
+
+### Connexion admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### ================================
+### 2. AUTHENTIFICATION USER
+### ================================
+
+### Connexion utilisateur normal
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{newUserEmail}}",
+  "password": "{{newUserPassword}}"
+}
+
+### ================================
+### 3. API ADMIN - GESTION DES DEMANDES
+### ================================
+
+### Lister toutes les demandes en attente (ADMIN)
+GET {{baseUrl}}/api/admin/merchant-requests?status=pending
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+###
+
+### Voir le détail d'une demande (ADMIN)
+GET {{baseUrl}}/api/admin/merchant-requests/1
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+###
+
+### Approuver une demande de rejoindre un marchand (ADMIN)
+POST {{baseUrl}}/api/admin/merchant-requests/1/approve
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "adminNotes": "Profil validé, expérience confirmée. Bienvenue dans l'équipe !"
+}
+
+###
+
+### Rejeter une demande (ADMIN)
+POST {{baseUrl}}/api/admin/merchant-requests/1/reject
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "adminNotes": "Profil insuffisant pour le moment. Merci de postuler à nouveau dans 6 mois."
+}
+
+###
+
+### Approuver une demande de création de marchand (ADMIN)
+POST {{baseUrl}}/api/admin/merchant-requests/2/approve
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "adminNotes": "Excellent projet, toutes les informations sont complètes. Marchand approuvé !"
+}
+
+###
+
+### Lister tous les marchands (ADMIN)
+GET {{baseUrl}}/api/admin/merchants
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+###
+
+### Suspendre un marchand (ADMIN)
+POST {{baseUrl}}/api/admin/merchants/1/suspend
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "reason": "Activité suspecte détectée, suspension temporaire pour vérification."
+}
+
+###
+
+### Réactiver un marchand (ADMIN)
+POST {{baseUrl}}/api/admin/merchants/1/activate
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "notes": "Vérifications terminées, marchand réactivé."
+}
+
+### ================================
+### 4. API MARCHANDS - DEMANDES UTILISATEUR
+### ================================
+
+### Lister les marchands disponibles pour rejoindre
+GET {{baseUrl}}/api/merchants/available
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+###
+
+### Faire une demande pour rejoindre un marchand existant
+POST {{baseUrl}}/api/merchants/join-request
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "merchantId": 1,
+  "requestedRole": "developer",
+  "justification": "Je suis développeur fullstack avec 5 ans d'expérience en Node.js et React. Je souhaite rejoindre votre équipe pour contribuer au développement de vos solutions de paiement."
+}
+
+###
+
+### Faire une demande pour créer un nouveau marchand
+POST {{baseUrl}}/api/merchants/create-request
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "merchantName": "MyTechStore",
+  "websiteUrl": "https://mytechstore.example.com",
+  "businessType": "e-commerce",
+  "companyName": "MyTech SARL",
+  "companyAddress": "123 Rue de la Tech, 75001 Paris, France",
+  "companyPhone": "+33 1 23 45 67 89",
+  "companyEmail": "contact@mytechstore.example.com",
+  "siret": "12345678901234",
+  "description": "Boutique en ligne spécialisée dans la vente de matériel informatique et de gadgets technologiques.",
+  "justification": "Fort de 10 ans d'expérience dans le e-commerce, je souhaite créer une nouvelle plateforme innovante pour la vente de produits tech."
+}
+
+###
+
+### Voir mes demandes en cours
+GET {{baseUrl}}/api/merchants/my-requests
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+###
+
+### Voir mes marchands (où je suis membre)
+GET {{baseUrl}}/api/merchants/my-merchants
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+### ================================
+### 5. API MARCHANDS - GESTION (POUR LES MEMBRES)
+### ================================
+
+### Voir les détails d'un marchand dont je suis membre
+GET {{baseUrl}}/api/merchants/1/details
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+###
+
+### Voir les membres d'un marchand (si admin/manager)
+GET {{baseUrl}}/api/merchants/1/members
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+###
+
+### Mettre à jour les informations d'un marchand (si admin/manager)
+PUT {{baseUrl}}/api/merchants/1
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "description": "Description mise à jour de notre boutique",
+  "webhookUrl": "https://techshop-online.example.com/webhooks/payment-v2"
+}
+
+###
+
+### Régénérer les clés API (si admin)
+POST {{baseUrl}}/api/merchants/1/regenerate-keys
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+### ================================
+### 6. TESTS D'ERREURS ET SÉCURITÉ
+### ================================
+
+### Tenter d'accéder aux données admin sans token admin
+GET {{baseUrl}}/api/admin/merchant-requests
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+###
+
+### Tenter de créer une demande sans authentification
+POST {{baseUrl}}/api/merchants/create-request
+Content-Type: application/json
+
+{
+  "merchantName": "Unauthorized Store"
+}
+
+###
+
+### Tenter d'approuver une demande sans être admin
+POST {{baseUrl}}/api/admin/merchant-requests/1/approve
+Authorization: Bearer {{user_token}}
+Content-Type: application/json
+
+{
+  "adminNotes": "Tentative d'accès non autorisé"
+}

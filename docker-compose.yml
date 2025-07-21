@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: payment_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - payment_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis pour le cache
+  redis:
+    image: redis:alpine
+    container_name: payment_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - payment_network
+
+  # MongoDB pour statistiques et recherches
+  mongodb:
+    image: mongo:7.0
+    container_name: payment_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB_NAME}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongodb.js:/docker-entrypoint-initdb.d/init-mongodb.js
+    networks:
+      - payment_network
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: payment_backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
+      - RESEND_TO_EMAIL=${RESEND_TO_EMAIL}
+      - PSP_URL=http://psp-emulator:3002
+      - BACKEND_URL=http://backend:3000
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - redis
+      - mongodb
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - payment_network
+
+  # Frontend Vue.js
+  frontend:
+    build: ./frontend
+    container_name: payment_frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - payment_network
+
+  # PSP Emulator
+  psp-emulator:
+    build: ./psp-emulator
+    container_name: payment_psp
+    ports:
+      - "3002:3002"
+    environment:
+      - BACKEND_URL=http://backend:3000
+      - PSP_PORT=3002
+    env_file:
+      - .env
+    networks:
+      - payment_network
+
+  # Test Merchant
+  test-merchant:
+    build: ./test-merchant
+    container_name: payment_merchant
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./test-merchant:/app
+      - /app/node_modules
+    networks:
+      - payment_network
+
+  # Cron Service
+  cron-service:
+    build: ./cron-service
+    container_name: payment_cron
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - redis
+      - mongodb
+    networks:
+      - payment_network
+
+volumes:
+  mysql_data:
+  mongodb_data:
+
+networks:
+  payment_network:
+    driver: bridge
