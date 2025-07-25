@@ -48,6 +48,8 @@ app.use('/api/operations', operationRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
 // Route racine
+
+// Route racine API
 app.get('/', (req, res) => {
     res.json({
         message: 'Payment Platform API',
@@ -59,6 +61,18 @@ app.get('/', (req, res) => {
             admin: '/api/admin'
         }
     });
+});
+
+// Servir le frontend pour toute route non-API (SPA)
+const path = require('path');
+const fs = require('fs');
+const frontendDist = path.join(__dirname, '../frontend/dist/index.html');
+app.get(/^\/(?!api|health|favicon\.ico|robots\.txt).*/, (req, res, next) => {
+    if (fs.existsSync(frontendDist)) {
+        res.sendFile(frontendDist);
+    } else {
+        next();
+    }
 });
 
 // Route test

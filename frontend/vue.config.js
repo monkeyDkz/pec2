@@ -10,6 +10,13 @@ module.exports = defineConfig({
     allowedHosts: 'all',
     client: {
       webSocketURL: 'auto://0.0.0.0:0/ws'
+    },
+    proxy: {
+      '/api': {
+        target: 'http://backend:3000',
+        changeOrigin: true,
+        pathRewrite: (path, req) => path.replace(/^\/api/, '')
+      }
     }
   },
 

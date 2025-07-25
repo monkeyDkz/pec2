@@ -8,7 +8,8 @@ const corsOptions = {
     
     // Liste des origins autorisées
     const allowedOrigins = [
-      'http://localhost:8080',  // Frontend en développement
+      'http://localhost:8080',
+      'http://localhost:8081',  // Frontend en développement
       'http://localhost:3000',  // Au cas où le frontend serait sur 3000
       'http://172.25.0.3:8080', // Frontend dans Docker
       'http://frontend:8080',   // Frontend via le nom de service Docker

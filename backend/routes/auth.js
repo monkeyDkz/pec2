@@ -1,3 +1,5 @@
+// Récupérer l'utilisateur courant via le token
+// (déplacé plus bas après la déclaration du router)
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
@@ -12,6 +14,18 @@ router.post('/resend-verification', validate('resendVerification'), authControll
 
 // Routes protégées
 router.get('/profile', authenticateToken, authController.getProfile);
+
+// Récupérer l'utilisateur courant via le token (pour la persistance de session)
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Non authentifié' })
+    }
+    res.json(req.user.toJSON())
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Erreur serveur', error: err.message })
+  }
+});
 
 // Route de test
 router.get('/test', (req, res) => {

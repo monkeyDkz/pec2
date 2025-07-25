@@ -1,0 +1,2171 @@
+import axios from 'axios'
+const API_URL = 'http://localhost:3000/api/auth'
+
+export const register = (data) =>
+  axios.post(`${API_URL}/register`, data)
+
+export const login = (data) =>
+  axios.post(`${API_URL}/login`, data)
+
+export const verifyEmail = (data) =>
+  axios.post(`${API_URL}/verify-email`, data)
+
+export const resendVerification = (data) =>
+  axios.post(`${API_URL}/resend-verification`, data)
+
+export const getProfile = (token) =>
+  axios.get(`${API_URL}/profile`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })import apiClient from './api'
+
+export const merchantService = {
+  // Vérifier les marchands de l'utilisateur
+  async getMyMerchants() {
+    try {
+      const response = await apiClient.get('/merchants')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des marchands')
+    }
+  },
+
+  // Voir les marchands disponibles pour rejoindre
+  async getAvailableMerchants(params = {}) {
+    try {
+      const response = await apiClient.get('/merchants/available', { params })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des marchands disponibles')
+    }
+  },
+
+  // Voir mes demandes en cours
+  async getMyRequests() {
+    try {
+      const response = await apiClient.get('/merchants/my-requests')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des demandes')
+    }
+  },
+
+  // Créer une demande pour un nouveau marchand
+  async createMerchantRequest(data) {
+    try {
+      const response = await apiClient.post('/merchants/create-request', data)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la création de la demande')
+    }
+  },
+
+  // Faire une demande pour rejoindre un marchand existant
+  async joinMerchantRequest(data) {
+    try {
+      const response = await apiClient.post('/merchants/join-request', data)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la demande d\'adhésion')
+    }
+  },
+
+  // Dashboard marchand
+  async getDashboard() {
+    try {
+      const response = await apiClient.get('/merchants/dashboard')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors du chargement du dashboard')
+    }
+  },
+
+  // Détails d'un marchand spécifique
+  async getMerchantDetails(merchantId) {
+    try {
+      const response = await apiClient.get(`/merchants/${merchantId}/details`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des détails')
+    }
+  },
+
+  // Credentials API d'un marchand
+  async getMerchantCredentials(merchantId) {
+    try {
+      const response = await apiClient.get(`/merchants/${merchantId}/credentials`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des credentials')
+    }
+  },
+
+  // Transactions d'un marchand
+  async getMerchantTransactions(merchantId, params = {}) {
+    try {
+      const response = await apiClient.get(`/merchants/${merchantId}/transactions`, { params })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des transactions')
+    }
+  },
+
+  // Membres d'un marchand
+  async getMerchantMembers(merchantId) {
+    try {
+      const response = await apiClient.get(`/merchants/${merchantId}/members`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des membres')
+    }
+  },
+
+  // Mettre à jour un marchand
+  async updateMerchant(merchantId, data) {
+    try {
+      const response = await apiClient.put(`/merchants/${merchantId}`, data)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la mise à jour')
+    }
+  },
+
+  // Régénérer les clés API
+  async regenerateApiKeys(merchantId) {
+    try {
+      const response = await apiClient.post(`/merchants/${merchantId}/regenerate-keys`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la régénération des clés')
+    }
+  },
+
+  // Test webhook
+  async testWebhook(merchantId, webhookUrl) {
+    try {
+      const response = await apiClient.post(`/merchants/${merchantId}/test-webhook`, { webhookUrl })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors du test webhook')
+    }
+  }
+}
+
+export default merchantServiceimport apiClient from './api'
+
+export const adminService = {
+  // Dashboard admin
+  async getDashboard() {
+    try {
+      const response = await apiClient.get('/admin/dashboard')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors du chargement du dashboard admin')
+    }
+  },
+
+  // Demandes de marchands
+  async getMerchantRequests(params = {}) {
+    try {
+      const response = await apiClient.get('/admin/merchant-requests', { params })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des demandes')
+    }
+  },
+
+  // Détail d'une demande
+  async getMerchantRequest(requestId) {
+    try {
+      const response = await apiClient.get(`/admin/merchant-requests/${requestId}`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération de la demande')
+    }
+  },
+
+  // Approuver une demande
+  async approveMerchantRequest(requestId, adminNotes = '') {
+    try {
+      const response = await apiClient.post(`/admin/merchant-requests/${requestId}/approve`, {
+        adminNotes
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de l\'approbation')
+    }
+  },
+
+  // Rejeter une demande
+  async rejectMerchantRequest(requestId, adminNotes = '') {
+    try {
+      const response = await apiClient.post(`/admin/merchant-requests/${requestId}/reject`, {
+        adminNotes
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors du rejet')
+    }
+  },
+
+  // Liste des marchands
+  async getAllMerchants(params = {}) {
+    try {
+      const response = await apiClient.get('/admin/merchants', { params })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des marchands')
+    }
+  },
+
+  // Suspendre un marchand
+  async suspendMerchant(merchantId, reason = '') {
+    try {
+      const response = await apiClient.post(`/admin/merchants/${merchantId}/suspend`, {
+        reason
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la suspension')
+    }
+  },
+
+  // Activer un marchand
+  async activateMerchant(merchantId, notes = '') {
+    try {
+      const response = await apiClient.post(`/admin/merchants/${merchantId}/activate`, {
+        notes
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de l\'activation')
+    }
+  },
+
+  // Régénérer clé API
+  async regenerateApiKey(merchantId) {
+    try {
+      const response = await apiClient.post(`/admin/merchants/${merchantId}/regenerate-keys`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la régénération des clés')
+    }
+  },
+
+  // Transactions (admin)
+  async getAllTransactions(params = {}) {
+    try {
+      const response = await apiClient.get('/admin/transactions', { params })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des transactions')
+    }
+  },
+
+  // Rembourser transaction
+  async refundTransaction(transactionId, amount, reason = '') {
+    try {
+      const response = await apiClient.post(`/admin/transactions/${transactionId}/refund`, {
+        amount,
+        reason
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors du remboursement')
+    }
+  },
+
+  // Forcer completion transaction
+  async forceCompleteTransaction(transactionId) {
+    try {
+      const response = await apiClient.post(`/admin/transactions/${transactionId}/force-complete`)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la validation forcée')
+    }
+  },
+
+  // Statistiques dashboard
+  async getDashboardStats() {
+    try {
+      const response = await apiClient.get('/admin/stats')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des statistiques')
+    }
+  },
+
+  // Statistiques des transactions
+  async getTransactionStats() {
+    try {
+      const response = await apiClient.get('/admin/transactions/stats')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des statistiques de transactions')
+    }
+  },
+
+  // Paramètres de la plateforme
+  async getPlatformSettings() {
+    try {
+      const response = await apiClient.get('/admin/settings')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération des paramètres')
+    }
+  },
+
+  // Sauvegarder les paramètres
+  async savePlatformSettings(settings) {
+    try {
+      const response = await apiClient.post('/admin/settings', settings)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la sauvegarde des paramètres')
+    }
+  }
+}
+
+export default adminServiceimport apiClient from './api'
+
+export const authService = {
+  // Inscription
+  async register(userData) {
+    try {
+      const response = await apiClient.post('/auth/register', {
+        email: userData.email,
+        password: userData.password,
+        first_name: userData.firstName,
+        last_name: userData.lastName
+      })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de l\'inscription')
+    }
+  },
+
+  // Vérification email
+  async verifyEmail(token) {
+    try {
+      const response = await apiClient.post('/auth/verify-email', { token })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la vérification')
+    }
+  },
+
+  // Renvoyer email de vérification
+  async resendVerification(email) {
+    try {
+      const response = await apiClient.post('/auth/resend-verification', { email })
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors du renvoi de l\'email')
+    }
+  },
+
+  // Connexion
+  async login(credentials) {
+    try {
+      const response = await apiClient.post('/auth/login', credentials)
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la connexion')
+    }
+  },
+
+  // Récupérer profil utilisateur
+  async getProfile() {
+    try {
+      const response = await apiClient.get('/auth/profile')
+      return response.data
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Erreur lors de la récupération du profil')
+    }
+  },
+
+  // Déconnexion (côté client)
+  logout() {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_data')
+    // Rediriger vers la page de connexion sera géré par le store
+  },
+
+  // Vérifier si l'utilisateur est connecté
+  isAuthenticated() {
+    const token = localStorage.getItem('auth_token')
+    return !!token
+  },
+
+  // Récupérer le token stocké
+  getToken() {
+    return localStorage.getItem('auth_token')
+  },
+
+  // Stocker le token et les données utilisateur
+  setAuthData(token, user) {
+    localStorage.setItem('auth_token', token)
+    localStorage.setItem('user_data', JSON.stringify(user))
+  },
+
+  // Récupérer les données utilisateur stockées
+  getUserData() {
+    const userData = localStorage.getItem('user_data')
+    return userData ? JSON.parse(userData) : null
+  }
+}
+
+export default authService
+import axios from 'axios'
+
+// Configuration de l'URL de base selon l'environnement
+// Dans Docker, le frontend s'exécute dans le navigateur, donc il doit utiliser localhost
+const API_BASE_URL = process.env.VUE_APP_API_URL || 'http://localhost:3000/api'
+
+class ApiService {
+  constructor() {
+    this.client = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: parseInt(process.env.VUE_APP_API_TIMEOUT) || 10000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    console.log('🌐 API Base URL:', API_BASE_URL) // Debug log
+
+    // Intercepteur pour ajouter le token d'authentification
+    this.client.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('authToken')
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`
+        }
+        console.log('📡 API Request:', config.method?.toUpperCase(), config.url) // Debug log
+        return config
+      },
+      (error) => {
+        console.error('❌ Request Error:', error)
+        return Promise.reject(error)
+      }
+    )
+
+    // Intercepteur pour gérer les réponses
+    this.client.interceptors.response.use(
+      (response) => {
+        console.log('✅ API Response:', response.status, response.config.url) // Debug log
+        return response.data
+      },
+      (error) => {
+        console.error('❌ API Error:', {
+          url: error.config?.url,
+          status: error.response?.status,
+          message: error.message,
+          code: error.code
+        })
+
+        if (error.response?.status === 401) {
+          localStorage.removeItem('authToken')
+          localStorage.removeItem('userType')
+          localStorage.removeItem('userEmail')
+          localStorage.removeItem('userId')
+          window.location.href = '/login'
+        }
+
+        // Gestion des erreurs de réseau
+        if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
+          console.error('🚫 Connexion au backend impossible')
+          return Promise.reject(new Error('Impossible de se connecter au serveur'))
+        }
+
+        return Promise.reject(error)
+      }
+    )
+  }
+
+  // =============================================================================
+  // MÉTHODES HTTP GÉNÉRIQUES (OBLIGATOIRE POUR AUTHSERVICE)
+  // =============================================================================
+  
+  async get(url, config = {}) {
+    console.log('🌍 GET:', `${this.client.defaults.baseURL}${url}`)
+    return this.client.get(url, config)
+  }
+
+  async post(url, data = {}, config = {}) {
+    console.log('🌍 POST:', `${this.client.defaults.baseURL}${url}`, data)
+    return this.client.post(url, data, config)
+  }
+
+  async put(url, data = {}, config = {}) {
+    console.log('🌍 PUT:', `${this.client.defaults.baseURL}${url}`, data)
+    return this.client.put(url, data, config)
+  }
+
+  async delete(url, config = {}) {
+    console.log('🌍 DELETE:', `${this.client.defaults.baseURL}${url}`)
+    return this.client.delete(url, config)
+  }
+
+  // =============================================================================
+  // AUTHENTIFICATION
+  // =============================================================================
+  
+  async login(credentials) {
+    const response = await this.client.post('/auth/login', credentials)
+    if (response.data && response.data.token) {
+      localStorage.setItem('authToken', response.data.token)
+      localStorage.setItem('userType', response.data.user.role)
+      localStorage.setItem('userEmail', response.data.user.email)
+      localStorage.setItem('userId', response.data.user.id)
+    }
+    return response
+  }
+
+  async register(userData) {
+    return this.client.post('/auth/register', userData)
+  }
+
+  async logout() {
+    return this.client.post('/auth/logout')
+  }
+
+  async getProfile() {
+    return this.client.get('/auth/profile')
+  }
+
+  async verifyEmail(token) {
+    return this.client.post('/auth/verify-email', { token })
+  }
+
+  // =============================================================================
+  // ADMIN ROUTES
+  // =============================================================================
+
+  async getAdminDashboard() {
+    return this.client.get('/admin/dashboard')
+  }
+
+  async getAllMerchants(params = {}) {
+    return this.client.get('/admin/merchants', { params })
+  }
+
+  async getAllTransactions(params = {}) {
+    return this.client.get('/admin/transactions', { params })
+  }
+
+  async getMerchantRequests(params = {}) {
+    return this.client.get('/admin/merchant-requests', { params })
+  }
+
+  async approveMerchantRequest(requestId, adminNotes = '') {
+    return this.client.post(`/admin/merchant-requests/${requestId}/approve`, { adminNotes })
+  }
+
+  async rejectMerchantRequest(requestId, adminNotes = '') {
+    return this.client.post(`/admin/merchant-requests/${requestId}/reject`, { adminNotes })
+  }
+
+  async suspendMerchant(merchantId, reason = '') {
+    return this.client.post(`/admin/merchants/${merchantId}/suspend`, { reason })
+  }
+
+  async activateMerchant(merchantId, notes = '') {
+    return this.client.post(`/admin/merchants/${merchantId}/activate`, { notes })
+  }
+
+  async impersonateMerchant(merchantId) {
+    return this.client.post(`/admin/impersonate/${merchantId}`)
+  }
+
+  async refundTransaction(transactionId, amount = null, reason = '') {
+    return this.client.post(`/admin/transactions/${transactionId}/refund`, { amount, reason })
+  }
+
+  async exportTransactions(filters = {}) {
+    return this.client.post('/admin/transactions/export', filters)
+  }
+
+  async getPlatformSettings() {
+    return this.client.get('/admin/settings')
+  }
+
+  async savePlatformSettings(settings) {
+    return this.client.post('/admin/settings', settings)
+  }
+
+  async getAdminStats() {
+    return this.client.get('/admin/stats')
+  }
+
+  // =============================================================================
+  // MERCHANT ROUTES
+  // =============================================================================
+
+  async getMerchantDashboard() {
+    return this.client.get('/merchants/dashboard')
+  }
+
+  async getMyMerchants() {
+    return this.client.get('/merchants')
+  }
+
+  async getAvailableMerchants(params = {}) {
+    return this.client.get('/merchants/available', { params })
+  }
+
+  async createJoinRequest(data) {
+    return this.client.post('/merchants/join-request', data)
+  }
+
+  async createMerchantRequest(data) {
+    return this.client.post('/merchants/create-request', data)
+  }
+
+  async getMyRequests(params = {}) {
+    return this.client.get('/merchants/my-requests', { params })
+  }
+
+  async getMerchantDetails(merchantId) {
+    return this.client.get(`/merchants/${merchantId}/details`)
+  }
+
+  async getMerchantMembers(merchantId) {
+    return this.client.get(`/merchants/${merchantId}/members`)
+  }
+
+  async updateMerchant(merchantId, data) {
+    return this.client.put(`/merchants/${merchantId}`, data)
+  }
+
+  async regenerateApiKeys(merchantId) {
+    return this.client.post(`/merchants/${merchantId}/regenerate-keys`)
+  }
+
+  // Nouvelles méthodes pour le dashboard marchand
+  async getMerchantTransactions(merchantId, params = {}) {
+    return this.client.get(`/merchants/${merchantId}/transactions`, { params })
+  }
+
+  async getMerchantCredentials(merchantId) {
+    return this.client.get(`/merchants/${merchantId}/credentials`)
+  }
+
+  async createRefund(merchantId, data) {
+    return this.client.post(`/merchants/${merchantId}/refund`, data)
+  }
+
+  async getMerchantRefunds(merchantId, params = {}) {
+    return this.client.get(`/merchants/${merchantId}/refunds`, { params })
+  }
+
+  async regenerateSecret(merchantId) {
+    return this.client.post(`/merchants/${merchantId}/regenerate-secret`)
+  }
+
+  async testWebhook(merchantId) {
+    return this.client.post(`/merchants/${merchantId}/test-webhook`)
+  }
+
+  // =============================================================================
+  // TRANSACTIONS (PUBLIC API)
+  // =============================================================================
+
+  async getTransaction(transactionId) {
+    return this.client.get(`/transactions/${transactionId}`)
+  }
+
+  async processPayment(transactionId, paymentData) {
+    return this.client.post(`/transactions/${transactionId}/process`, paymentData)
+  }
+
+  async cancelTransaction(transactionId, token) {
+    return this.client.post(`/transactions/${transactionId}/cancel`, { token })
+  }
+}
+
+export default new ApiService()// src/router/index.js
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const routes = [
+  { path: '/', component: () => import('@/views/Home.vue') },
+  { path: '/login', component: () => import('@/views/auth/Login.vue') },
+  { path: '/register', component: () => import('@/views/auth/Register.vue') },
+  { path: '/verify-email', component: () => import('@/views/auth/VerifyEmail.vue') },
+  {
+    path: '/dashboard',
+    component: () => import('@/views/user/Dashboard.vue'),
+    meta: { requiresAuth: true }
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+})
+
+// Auth navigation guard
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  if (to.meta.requiresAuth && !authStore.token) {
+    return next('/login')
+  }
+  next()
+})
+
+export default router
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import * as api from '@/services/auth'
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
+  const token = ref(localStorage.getItem('token') || '')
+  const loading = ref(false)
+  const error = ref('')
+
+  const isAuthenticated = computed(() => !!user.value && !!token.value)
+
+  async function register(payload) {
+    loading.value = true
+    error.value = ''
+    try {
+      await api.register(payload)
+      return true
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Erreur lors de l’inscription.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function login(payload) {
+    loading.value = true
+    error.value = ''
+    try {
+      const res = await api.login(payload)
+      token.value = res.data.data.token
+      localStorage.setItem('token', token.value)
+      // Récupérer le profil pour le rôle
+      const profileRes = await api.getProfile(token.value)
+      user.value = profileRes.data.data.user || profileRes.data.user || profileRes.data
+      return user.value
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Erreur lors de la connexion.'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function logout() {
+    token.value = ''
+    user.value = null
+    localStorage.removeItem('token')
+  }
+
+  async function fetchUser() {
+    if (!token.value) return null
+    try {
+      const res = await api.getProfile(token.value)
+      user.value = res.data?.data?.user || null
+      return user.value
+    } catch {
+      logout()
+      return null
+    }
+  }
+
+  async function initializeAuth() {
+    if (token.value) {
+      await fetchUser()
+    } else {
+      user.value = null
+    }
+  }
+
+  return { user, token, loading, error, register, login, logout, fetchUser, initializeAuth, isAuthenticated }
+})import { defineStore } from 'pinia'
+import { merchantService } from '@/services/merchantService'
+
+export const useMerchantStore = defineStore('merchant', {
+  state: () => ({
+    // Marchands de l'utilisateur
+    merchants: [],
+    
+    // Demandes en attente
+    pendingRequests: [],
+    
+    // Marchand actuellement sélectionné
+    currentMerchant: null,
+    
+    // Dashboard data du marchand courant
+    dashboardData: null,
+    
+    // Transactions du marchand courant
+    transactions: [],
+    
+    // Paramètres du marchand courant
+    settings: null,
+    
+    // États de chargement
+    loading: {
+      merchants: false,
+      dashboard: false,
+      transactions: false,
+      settings: false
+    },
+    
+    // Pagination pour les transactions
+    transactionsPagination: {
+      page: 1,
+      limit: 20,
+      total: 0,
+      pages: 0
+    },
+    
+    // Filtres pour les transactions
+    transactionsFilters: {
+      status: '',
+      dateFrom: '',
+      dateTo: '',
+      search: ''
+    }
+  }),
+
+  getters: {
+    // Marchands actifs seulement
+    activeMerchants: (state) => {
+      return state.merchants.filter(merchant => merchant.status === 'active')
+    },
+
+    // Demandes en attente seulement
+    pendingMerchantRequests: (state) => {
+      return state.pendingRequests.filter(request => 
+        ['pending', 'submitted', 'in_review'].includes(request.status)
+      )
+    },
+
+    // Statistiques du dashboard
+    dashboardStats: (state) => {
+      return state.dashboardData?.stats || {}
+    },
+
+    // Transactions récentes
+    recentTransactions: (state) => {
+      return state.transactions.slice(0, 10)
+    },
+
+    // Vérifier si l'utilisateur a des marchands
+    hasMerchants: (state) => {
+      return state.merchants.length > 0
+    },
+
+    // Vérifier si l'utilisateur a des demandes en attente
+    hasPendingRequests: (state) => {
+      return state.pendingRequests.length > 0
+    },
+
+    // Obtenir un marchand par ID
+    getMerchantById: (state) => {
+      return (merchantId) => state.merchants.find(m => m.id === merchantId)
+    },
+
+    // Vérifier les permissions sur le marchand courant
+    currentMerchantPermissions: (state) => {
+      if (!state.currentMerchant) return {}
+      
+      const userRole = state.currentMerchant.userRole || 'member'
+      
+      return {
+        canManageSettings: ['owner', 'admin', 'manager'].includes(userRole),
+        canViewTransactions: ['owner', 'admin', 'manager', 'accountant'].includes(userRole),
+        canManageCredentials: ['owner', 'admin'].includes(userRole),
+        canManageUsers: ['owner', 'admin'].includes(userRole),
+        canRefund: ['owner', 'admin', 'manager'].includes(userRole)
+      }
+    }
+  },
+
+  actions: {
+    // Charger tous les marchands de l'utilisateur
+    async loadMyMerchants() {
+      try {
+        this.loading.merchants = true
+        const data = await merchantService.getMyMerchants()
+        
+        this.merchants = data.merchants || []
+        this.pendingRequests = data.pendingRequests || []
+        
+        return data
+      } catch (error) {
+        console.error('Erreur chargement marchands:', error)
+        throw error
+      } finally {
+        this.loading.merchants = false
+      }
+    },
+
+    // Créer une demande de marchand
+    async createMerchantRequest(merchantData) {
+      try {
+        const result = await merchantService.createMerchantRequest(merchantData)
+        
+        // Ajouter la nouvelle demande à la liste
+        this.pendingRequests.push(result.request)
+        
+        return result
+      } catch (error) {
+        console.error('Erreur création demande marchand:', error)
+        throw error
+      }
+    },
+
+    // Rejoindre un marchand existant
+    async joinMerchantRequest(joinData) {
+      try {
+        const result = await merchantService.joinMerchantRequest(joinData)
+        
+        // Ajouter la nouvelle demande à la liste
+        this.pendingRequests.push(result.request)
+        
+        return result
+      } catch (error) {
+        console.error('Erreur demande rejoindre marchand:', error)
+        throw error
+      }
+    },
+
+    // Rechercher un marchand (pour la fonction rejoindre)
+    async searchMerchant(criteria) {
+      try {
+        const result = await merchantService.searchMerchant(criteria)
+        return result.merchant
+      } catch (error) {
+        console.error('Erreur recherche marchand:', error)
+        throw error
+      }
+    },
+
+    // Sélectionner un marchand et charger son dashboard
+    async selectMerchant(merchantId) {
+      try {
+        const merchant = this.getMerchantById(merchantId)
+        if (!merchant) {
+          throw new Error('Marchand non trouvé')
+        }
+
+        this.currentMerchant = merchant
+        
+        // Charger le dashboard du marchand
+        await this.loadMerchantDashboard(merchantId)
+        
+        return merchant
+      } catch (error) {
+        console.error('Erreur sélection marchand:', error)
+        throw error
+      }
+    },
+
+    // Charger le dashboard d'un marchand
+    async loadMerchantDashboard(merchantId) {
+      try {
+        this.loading.dashboard = true
+        const data = await merchantService.getDashboard(merchantId)
+        
+        this.dashboardData = data
+        
+        return data
+      } catch (error) {
+        console.error('Erreur chargement dashboard marchand:', error)
+        throw error
+      } finally {
+        this.loading.dashboard = false
+      }
+    },
+
+    // Charger les transactions d'un marchand
+    async loadMerchantTransactions(merchantId, params = {}) {
+      try {
+        this.loading.transactions = true
+        
+        // Fusionner avec les filtres et pagination actuels
+        const queryParams = {
+          page: this.transactionsPagination.page,
+          limit: this.transactionsPagination.limit,
+          ...this.transactionsFilters,
+          ...params
+        }
+
+        const data = await merchantService.getTransactions(merchantId, queryParams)
+        
+        this.transactions = data.transactions || []
+        this.transactionsPagination = {
+          page: data.pagination?.page || 1,
+          limit: data.pagination?.limit || 20,
+          total: data.pagination?.total || 0,
+          pages: data.pagination?.pages || 0
+        }
+        
+        return data
+      } catch (error) {
+        console.error('Erreur chargement transactions:', error)
+        throw error
+      } finally {
+        this.loading.transactions = false
+      }
+    },
+
+    // Charger les paramètres d'un marchand
+    async loadMerchantSettings(merchantId) {
+      try {
+        this.loading.settings = true
+        const data = await merchantService.getSettings(merchantId)
+        
+        this.settings = data
+        
+        return data
+      } catch (error) {
+        console.error('Erreur chargement paramètres marchand:', error)
+        throw error
+      } finally {
+        this.loading.settings = false
+      }
+    },
+
+    // Sauvegarder les paramètres d'un marchand
+    async saveMerchantSettings(merchantId, settings) {
+      try {
+        const data = await merchantService.updateSettings(merchantId, settings)
+        
+        this.settings = data
+        
+        return data
+      } catch (error) {
+        console.error('Erreur sauvegarde paramètres:', error)
+        throw error
+      }
+    },
+
+    // Gérer les identifiants API
+    async regenerateApiCredentials(merchantId) {
+      try {
+        const data = await merchantService.regenerateCredentials(merchantId)
+        
+        // Mettre à jour les credentials dans le marchand courant
+        if (this.currentMerchant && this.currentMerchant.id === merchantId) {
+          this.currentMerchant.credentials = data.credentials
+        }
+        
+        // Mettre à jour dans la liste des marchands
+        const merchantIndex = this.merchants.findIndex(m => m.id === merchantId)
+        if (merchantIndex !== -1) {
+          this.merchants[merchantIndex].credentials = data.credentials
+        }
+        
+        return data
+      } catch (error) {
+        console.error('Erreur régénération credentials:', error)
+        throw error
+      }
+    },
+
+    // Mettre à jour les filtres des transactions
+    updateTransactionsFilters(filters) {
+      this.transactionsFilters = { ...this.transactionsFilters, ...filters }
+    },
+
+    // Changer la page des transactions
+    setTransactionsPage(page) {
+      this.transactionsPagination.page = page
+    },
+
+    // Réinitialiser les filtres des transactions
+    resetTransactionsFilters() {
+      this.transactionsFilters = {
+        status: '',
+        dateFrom: '',
+        dateTo: '',
+        search: ''
+      }
+      this.transactionsPagination.page = 1
+    },
+
+    // Nettoyer le store (déconnexion)
+    clearStore() {
+      this.merchants = []
+      this.pendingRequests = []
+      this.currentMerchant = null
+      this.dashboardData = null
+      this.transactions = []
+      this.settings = null
+      this.loading = {
+        merchants: false,
+        dashboard: false,
+        transactions: false,
+        settings: false
+      }
+      this.transactionsPagination = {
+        page: 1,
+        limit: 20,
+        total: 0,
+        pages: 0
+      }
+      this.resetTransactionsFilters()
+    },
+
+    // Actions pour les transactions spécifiques
+    async refundTransaction(merchantId, transactionId, amount, reason) {
+      try {
+        const data = await merchantService.refundTransaction(merchantId, transactionId, {
+          amount,
+          reason
+        })
+        
+        // Mettre à jour la transaction dans la liste
+        const transactionIndex = this.transactions.findIndex(t => t.id === transactionId)
+        if (transactionIndex !== -1) {
+          this.transactions[transactionIndex] = { ...this.transactions[transactionIndex], ...data.transaction }
+        }
+        
+        return data
+      } catch (error) {
+        console.error('Erreur remboursement:', error)
+        throw error
+      }
+    },
+
+    // Actions pour la gestion des utilisateurs du marchand
+    async inviteUser(merchantId, userData) {
+      try {
+        const data = await merchantService.inviteUser(merchantId, userData)
+        return data
+      } catch (error) {
+        console.error('Erreur invitation utilisateur:', error)
+        throw error
+      }
+    },
+
+    async removeUserFromMerchant(merchantId, userId) {
+      try {
+        const data = await merchantService.removeUser(merchantId, userId)
+        return data
+      } catch (error) {
+        console.error('Erreur suppression utilisateur:', error)
+        throw error
+      }
+    },
+
+    async updateUserRole(merchantId, userId, newRole) {
+      try {
+        const data = await merchantService.updateUserRole(merchantId, userId, newRole)
+        return data
+      } catch (error) {
+        console.error('Erreur mise à jour rôle:', error)
+        throw error
+      }
+    }
+  }
+})
+
+export default useMerchantStore
+import { createPinia } from 'pinia'
+
+const pinia = createPinia()
+
+export default pinia
+
+// Export des stores pour faciliter l'import
+export { useAuthStore } from './auth'
+export { useMerchantsStore } from './merchants'
+export { useAdminStore } from './admin'
+export { useNotificationStore } from './notifications'import { defineStore } from 'pinia'
+import ApiService from '@/services/api'
+import { useNotificationStore } from './notifications'
+
+export const useMerchantsStore = defineStore('merchants', {
+  state: () => ({
+    // Merchants de l'utilisateur
+    myMerchants: [],
+    selectedMerchant: null,
+    
+    // Merchants disponibles pour rejoindre
+    availableMerchants: [],
+    
+    // Demandes de l'utilisateur
+    myRequests: [],
+    
+    // Détails d'un merchant spécifique
+    merchantDetails: null,
+    merchantMembers: [],
+    merchantCredentials: null,
+    
+    // Transactions et statistiques
+    transactions: [],
+    refunds: [],
+    dashboardStats: null,
+    
+    // États de chargement
+    loading: {
+      merchants: false,
+      requests: false,
+      available: false,
+      details: false,
+      transactions: false,
+      dashboard: false
+    },
+    
+    // Erreurs
+    errors: {
+      merchants: null,
+      requests: null,
+      available: null,
+      details: null,
+      transactions: null
+    },
+    
+    // Pagination
+    pagination: {
+      transactions: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+      },
+      refunds: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+      }
+    }
+  }),
+
+  getters: {
+    isOwnerOf: (state) => (merchantId) => {
+      const merchant = state.myMerchants.find(m => m.id === merchantId)
+      return merchant?.role === 'owner'
+    },
+    
+    isAdminOf: (state) => (merchantId) => {
+      const merchant = state.myMerchants.find(m => m.id === merchantId)
+      return ['owner', 'admin'].includes(merchant?.role)
+    },
+    
+    hasPendingRequests: (state) => {
+      return state.myRequests.some(req => req.status === 'pending')
+    },
+    
+    canJoinMerchant: (state) => (merchantId) => {
+      // Vérifier si l'utilisateur n'est pas déjà membre
+      const isMember = state.myMerchants.some(m => m.id === merchantId)
+      // Vérifier s'il n'y a pas déjà une demande en attente
+      const hasPendingRequest = state.myRequests.some(
+        req => req.merchantId === merchantId && req.status === 'pending'
+      )
+      
+      return !isMember && !hasPendingRequest
+    },
+    
+    recentTransactions: (state) => {
+      return state.transactions
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+    },
+    
+    totalRevenue: (state) => {
+      return state.transactions
+        .filter(t => t.status === 'completed')
+        .reduce((sum, t) => sum + t.amount, 0)
+    }
+  },
+
+  actions: {
+    // =============================================================================
+    // GESTION DES MERCHANTS DE L'UTILISATEUR
+    // =============================================================================
+    
+    async fetchMyMerchants() {
+      this.loading.merchants = true
+      this.errors.merchants = null
+
+      try {
+        const response = await ApiService.getMyMerchants()
+        this.myMerchants = response.data
+        
+        // Si aucun merchant sélectionné, prendre le premier
+        if (this.myMerchants.length > 0 && !this.selectedMerchant) {
+          this.selectedMerchant = this.myMerchants[0]
+        }
+        
+        return response
+      } catch (error) {
+        this.errors.merchants = error.response?.data?.message || 'Erreur lors du chargement des merchants'
+        throw error
+      } finally {
+        this.loading.merchants = false
+      }
+    },
+
+    async fetchAvailableMerchants(params = {}) {
+      this.loading.available = true
+      this.errors.available = null
+
+      try {
+        const response = await ApiService.getAvailableMerchants(params)
+        this.availableMerchants = response.data
+        return response
+      } catch (error) {
+        this.errors.available = error.response?.data?.message || 'Erreur lors du chargement des merchants disponibles'
+        throw error
+      } finally {
+        this.loading.available = false
+      }
+    },
+
+    async fetchMyRequests(params = {}) {
+      this.loading.requests = true
+      this.errors.requests = null
+
+      try {
+        const response = await ApiService.getMyRequests(params)
+        this.myRequests = response.data
+        return response
+      } catch (error) {
+        this.errors.requests = error.response?.data?.message || 'Erreur lors du chargement des demandes'
+        throw error
+      } finally {
+        this.loading.requests = false
+      }
+    },
+
+    // =============================================================================
+    // CREATION ET DEMANDES
+    // =============================================================================
+    
+    async createJoinRequest(data) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.createJoinRequest(data)
+        
+        // Mettre à jour la liste des demandes
+        await this.fetchMyRequests()
+        
+        notifications.addSuccess('Demande de rejoindre envoyée avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de l\'envoi de la demande'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async createMerchantRequest(data) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.createMerchantRequest(data)
+        
+        // Mettre à jour la liste des demandes
+        await this.fetchMyRequests()
+        
+        notifications.addSuccess('Demande de création de merchant envoyée avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de la création de la demande'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // DÉTAILS D'UN MERCHANT SPÉCIFIQUE
+    // =============================================================================
+    
+    async fetchMerchantDetails(merchantId) {
+      this.loading.details = true
+      this.errors.details = null
+
+      try {
+        const response = await ApiService.getMerchantDetails(merchantId)
+        this.merchantDetails = response.data
+        return response
+      } catch (error) {
+        this.errors.details = error.response?.data?.message || 'Erreur lors du chargement des détails'
+        throw error
+      } finally {
+        this.loading.details = false
+      }
+    },
+
+    async fetchMerchantMembers(merchantId) {
+      try {
+        const response = await ApiService.getMerchantMembers(merchantId)
+        this.merchantMembers = response.data
+        return response
+      } catch (error) {
+        console.error('Erreur lors du chargement des membres:', error)
+        throw error
+      }
+    },
+
+    async fetchMerchantCredentials(merchantId) {
+      try {
+        const response = await ApiService.getMerchantCredentials(merchantId)
+        this.merchantCredentials = response.data
+        return response
+      } catch (error) {
+        console.error('Erreur lors du chargement des identifiants:', error)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // TRANSACTIONS ET STATISTIQUES
+    // =============================================================================
+    
+    async fetchMerchantTransactions(merchantId, params = {}) {
+      this.loading.transactions = true
+      this.errors.transactions = null
+
+      try {
+        const response = await ApiService.getMerchantTransactions(merchantId, params)
+        this.transactions = response.data.transactions || response.data
+        
+        if (response.data.pagination) {
+          this.pagination.transactions = response.data.pagination
+        }
+        
+        return response
+      } catch (error) {
+        this.errors.transactions = error.response?.data?.message || 'Erreur lors du chargement des transactions'
+        throw error
+      } finally {
+        this.loading.transactions = false
+      }
+    },
+
+    async fetchMerchantDashboard() {
+      this.loading.dashboard = true
+
+      try {
+        const response = await ApiService.getMerchantDashboard()
+        this.dashboardStats = response.data
+        return response
+      } catch (error) {
+        console.error('Erreur lors du chargement du dashboard:', error)
+        throw error
+      } finally {
+        this.loading.dashboard = false
+      }
+    },
+
+    async fetchMerchantRefunds(merchantId, params = {}) {
+      try {
+        const response = await ApiService.getMerchantRefunds(merchantId, params)
+        this.refunds = response.data.refunds || response.data
+        
+        if (response.data.pagination) {
+          this.pagination.refunds = response.data.pagination
+        }
+        
+        return response
+      } catch (error) {
+        console.error('Erreur lors du chargement des remboursements:', error)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // ACTIONS MERCHANT
+    // =============================================================================
+    
+    async updateMerchant(merchantId, data) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.updateMerchant(merchantId, data)
+        
+        // Mettre à jour les détails si disponibles
+        if (this.merchantDetails?.id === merchantId) {
+          this.merchantDetails = { ...this.merchantDetails, ...response.data }
+        }
+        
+        // Mettre à jour dans la liste des merchants
+        const index = this.myMerchants.findIndex(m => m.id === merchantId)
+        if (index !== -1) {
+          this.myMerchants[index] = { ...this.myMerchants[index], ...response.data }
+        }
+        
+        notifications.addSuccess('Merchant mis à jour avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de la mise à jour'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async regenerateApiKeys(merchantId) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.regenerateApiKeys(merchantId)
+        
+        // Mettre à jour les identifiants
+        if (this.merchantCredentials) {
+          this.merchantCredentials = { ...this.merchantCredentials, ...response.data }
+        }
+        
+        notifications.addSuccess('Clés API régénérées avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de la régénération des clés'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async createRefund(merchantId, data) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.createRefund(merchantId, data)
+        
+        // Recharger les transactions et remboursements
+        await Promise.all([
+          this.fetchMerchantTransactions(merchantId),
+          this.fetchMerchantRefunds(merchantId)
+        ])
+        
+        notifications.addSuccess('Remboursement créé avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de la création du remboursement'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // UTILITAIRES
+    // =============================================================================
+    
+    selectMerchant(merchant) {
+      this.selectedMerchant = merchant
+    },
+
+    clearMerchantDetails() {
+      this.merchantDetails = null
+      this.merchantMembers = []
+      this.merchantCredentials = null
+    },
+
+    clearTransactions() {
+      this.transactions = []
+      this.refunds = []
+    },
+
+    clearErrors() {
+      this.errors = {
+        merchants: null,
+        requests: null,
+        available: null,
+        details: null,
+        transactions: null
+      }
+    }
+  }
+})
+import { defineStore } from 'pinia'
+import ApiService from '@/services/api'
+import { useNotificationStore } from './notifications'
+
+export const useAdminStore = defineStore('admin', {
+  state: () => ({
+    // Dashboard principal
+    dashboardStats: null,
+    platformSettings: null,
+    
+    // Merchants
+    allMerchants: [],
+    merchantRequests: [],
+    selectedMerchantRequest: null,
+    
+    // Transactions
+    allTransactions: [],
+    
+    // États de chargement
+    loading: {
+      dashboard: false,
+      merchants: false,
+      requests: false,
+      transactions: false,
+      settings: false
+    },
+    
+    // Erreurs
+    errors: {
+      dashboard: null,
+      merchants: null,
+      requests: null,
+      transactions: null,
+      settings: null
+    },
+    
+    // Filtres et pagination
+    filters: {
+      merchants: {
+        status: 'all',
+        search: '',
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      },
+      requests: {
+        status: 'pending',
+        search: '',
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      },
+      transactions: {
+        status: 'all',
+        merchantId: 'all',
+        dateRange: null,
+        search: '',
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+    },
+    
+    pagination: {
+      merchants: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+      },
+      requests: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+      },
+      transactions: {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0
+      }
+    }
+  }),
+
+  getters: {
+    pendingRequestsCount: (state) => {
+      return state.merchantRequests.filter(req => req.status === 'pending').length
+    },
+    
+    activeMerchantsCount: (state) => {
+      return state.allMerchants.filter(m => m.status === 'active').length
+    },
+    
+    suspendedMerchantsCount: (state) => {
+      return state.allMerchants.filter(m => m.status === 'suspended').length
+    },
+    
+    totalTransactionsVolume: (state) => {
+      return state.allTransactions
+        .filter(t => t.status === 'completed')
+        .reduce((sum, t) => sum + t.amount, 0)
+    },
+    
+    recentTransactions: (state) => {
+      return state.allTransactions
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 10)
+    },
+    
+    criticalAlerts: (state) => {
+      const alerts = []
+      
+      // Demandes en attente depuis plus de 24h
+      const oldRequests = state.merchantRequests.filter(req => {
+        const hoursSinceRequest = (Date.now() - new Date(req.createdAt)) / (1000 * 60 * 60)
+        return req.status === 'pending' && hoursSinceRequest > 24
+      })
+      
+      if (oldRequests.length > 0) {
+        alerts.push({
+          type: 'warning',
+          message: `${oldRequests.length} demande(s) en attente depuis plus de 24h`,
+          action: 'Traiter les demandes'
+        })
+      }
+      
+      // Merchants suspendus
+      const suspendedCount = state.suspendedMerchantsCount
+      if (suspendedCount > 0) {
+        alerts.push({
+          type: 'error',
+          message: `${suspendedCount} merchant(s) suspendu(s)`,
+          action: 'Vérifier les suspensions'
+        })
+      }
+      
+      return alerts
+    }
+  },
+
+  actions: {
+    // =============================================================================
+    // DASHBOARD ET STATISTIQUES
+    // =============================================================================
+    
+    async fetchAdminDashboard() {
+      this.loading.dashboard = true
+      this.errors.dashboard = null
+
+      try {
+        const response = await ApiService.getAdminDashboard()
+        this.dashboardStats = response.data
+        return response
+      } catch (error) {
+        this.errors.dashboard = error.response?.data?.message || 'Erreur lors du chargement du dashboard'
+        throw error
+      } finally {
+        this.loading.dashboard = false
+      }
+    },
+
+    async fetchAdminStats() {
+      try {
+        const response = await ApiService.getAdminStats()
+        this.dashboardStats = { ...this.dashboardStats, ...response.data }
+        return response
+      } catch (error) {
+        console.error('Erreur lors du chargement des statistiques:', error)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // GESTION DES MERCHANTS
+    // =============================================================================
+    
+    async fetchAllMerchants(params = {}) {
+      this.loading.merchants = true
+      this.errors.merchants = null
+
+      try {
+        const queryParams = {
+          ...this.filters.merchants,
+          ...params,
+          page: this.pagination.merchants.page,
+          limit: this.pagination.merchants.limit
+        }
+
+        const response = await ApiService.getAllMerchants(queryParams)
+        this.allMerchants = response.data.merchants || response.data
+        
+        if (response.data.pagination) {
+          this.pagination.merchants = response.data.pagination
+        }
+        
+        return response
+      } catch (error) {
+        this.errors.merchants = error.response?.data?.message || 'Erreur lors du chargement des merchants'
+        throw error
+      } finally {
+        this.loading.merchants = false
+      }
+    },
+
+    async suspendMerchant(merchantId, reason = '') {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.suspendMerchant(merchantId, reason)
+        
+        // Mettre à jour le merchant dans la liste
+        const index = this.allMerchants.findIndex(m => m.id === merchantId)
+        if (index !== -1) {
+          this.allMerchants[index] = { ...this.allMerchants[index], status: 'suspended' }
+        }
+        
+        notifications.addSuccess('Merchant suspendu avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de la suspension'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async activateMerchant(merchantId, notes = '') {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.activateMerchant(merchantId, notes)
+        
+        // Mettre à jour le merchant dans la liste
+        const index = this.allMerchants.findIndex(m => m.id === merchantId)
+        if (index !== -1) {
+          this.allMerchants[index] = { ...this.allMerchants[index], status: 'active' }
+        }
+        
+        notifications.addSuccess('Merchant activé avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de l\'activation'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async impersonateMerchant(merchantId) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.impersonateMerchant(merchantId)
+        notifications.addInfo('Mode impersonification activé')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de l\'impersonification'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // GESTION DES DEMANDES DE MERCHANTS
+    // =============================================================================
+    
+    async fetchMerchantRequests(params = {}) {
+      this.loading.requests = true
+      this.errors.requests = null
+
+      try {
+        const queryParams = {
+          ...this.filters.requests,
+          ...params,
+          page: this.pagination.requests.page,
+          limit: this.pagination.requests.limit
+        }
+
+        const response = await ApiService.getMerchantRequests(queryParams)
+        this.merchantRequests = response.data.requests || response.data
+        
+        if (response.data.pagination) {
+          this.pagination.requests = response.data.pagination
+        }
+        
+        return response
+      } catch (error) {
+        this.errors.requests = error.response?.data?.message || 'Erreur lors du chargement des demandes'
+        throw error
+      } finally {
+        this.loading.requests = false
+      }
+    },
+
+    async approveMerchantRequest(requestId, adminNotes = '') {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.approveMerchantRequest(requestId, adminNotes)
+        
+        // Mettre à jour la demande dans la liste
+        const index = this.merchantRequests.findIndex(req => req.id === requestId)
+        if (index !== -1) {
+          this.merchantRequests[index] = { 
+            ...this.merchantRequests[index], 
+            status: 'approved',
+            adminNotes,
+            processedAt: new Date().toISOString()
+          }
+        }
+        
+        notifications.addSuccess('Demande approuvée avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de l\'approbation'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async rejectMerchantRequest(requestId, adminNotes = '') {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.rejectMerchantRequest(requestId, adminNotes)
+        
+        // Mettre à jour la demande dans la liste
+        const index = this.merchantRequests.findIndex(req => req.id === requestId)
+        if (index !== -1) {
+          this.merchantRequests[index] = { 
+            ...this.merchantRequests[index], 
+            status: 'rejected',
+            adminNotes,
+            processedAt: new Date().toISOString()
+          }
+        }
+        
+        notifications.addSuccess('Demande rejetée avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors du rejet'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // GESTION DES TRANSACTIONS
+    // =============================================================================
+    
+    async fetchAllTransactions(params = {}) {
+      this.loading.transactions = true
+      this.errors.transactions = null
+
+      try {
+        const queryParams = {
+          ...this.filters.transactions,
+          ...params,
+          page: this.pagination.transactions.page,
+          limit: this.pagination.transactions.limit
+        }
+
+        const response = await ApiService.getAllTransactions(queryParams)
+        this.allTransactions = response.data.transactions || response.data
+        
+        if (response.data.pagination) {
+          this.pagination.transactions = response.data.pagination
+        }
+        
+        return response
+      } catch (error) {
+        this.errors.transactions = error.response?.data?.message || 'Erreur lors du chargement des transactions'
+        throw error
+      } finally {
+        this.loading.transactions = false
+      }
+    },
+
+    async refundTransaction(transactionId, amount = null, reason = '') {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.refundTransaction(transactionId, amount, reason)
+        
+        // Mettre à jour la transaction dans la liste
+        const index = this.allTransactions.findIndex(t => t.id === transactionId)
+        if (index !== -1) {
+          this.allTransactions[index] = { 
+            ...this.allTransactions[index], 
+            status: 'refunded',
+            refundedAt: new Date().toISOString(),
+            refundReason: reason
+          }
+        }
+        
+        notifications.addSuccess('Transaction remboursée avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors du remboursement'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    async exportTransactions(filters = {}) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.exportTransactions(filters)
+        notifications.addSuccess('Export généré avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de l\'export'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // PARAMÈTRES PLATEFORME
+    // =============================================================================
+    
+    async fetchPlatformSettings() {
+      this.loading.settings = true
+      this.errors.settings = null
+
+      try {
+        const response = await ApiService.getPlatformSettings()
+        this.platformSettings = response.data
+        return response
+      } catch (error) {
+        this.errors.settings = error.response?.data?.message || 'Erreur lors du chargement des paramètres'
+        throw error
+      } finally {
+        this.loading.settings = false
+      }
+    },
+
+    async savePlatformSettings(settings) {
+      const notifications = useNotificationStore()
+
+      try {
+        const response = await ApiService.savePlatformSettings(settings)
+        this.platformSettings = { ...this.platformSettings, ...settings }
+        notifications.addSuccess('Paramètres sauvegardés avec succès')
+        return response
+      } catch (error) {
+        const message = error.response?.data?.message || 'Erreur lors de la sauvegarde'
+        notifications.addError(message)
+        throw error
+      }
+    },
+
+    // =============================================================================
+    // UTILITAIRES
+    // =============================================================================
+    
+    updateMerchantsFilter(filterUpdate) {
+      this.filters.merchants = { ...this.filters.merchants, ...filterUpdate }
+      this.pagination.merchants.page = 1 // Reset à la première page
+    },
+
+    updateRequestsFilter(filterUpdate) {
+      this.filters.requests = { ...this.filters.requests, ...filterUpdate }
+      this.pagination.requests.page = 1
+    },
+
+    updateTransactionsFilter(filterUpdate) {
+      this.filters.transactions = { ...this.filters.transactions, ...filterUpdate }
+      this.pagination.transactions.page = 1
+    },
+
+    setMerchantsPage(page) {
+      this.pagination.merchants.page = page
+    },
+
+    setRequestsPage(page) {
+      this.pagination.requests.page = page
+    },
+
+    setTransactionsPage(page) {
+      this.pagination.transactions.page = page
+    },
+
+    selectMerchantRequest(request) {
+      this.selectedMerchantRequest = request
+    },
+
+    clearErrors() {
+      this.errors = {
+        dashboard: null,
+        merchants: null,
+        requests: null,
+        transactions: null,
+        settings: null
+      }
+    }
+  }
+})
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+
+export const useNotificationStore = defineStore('notifications', () => {
+  const notifications = ref([])
+  let nextId = 1
+
+  // Ajouter une notification
+  const addNotification = (notification) => {
+    const newNotification = {
+      id: nextId++,
+      type: notification.type || 'info', // 'success', 'error', 'warning', 'info'
+      title: notification.title || '',
+      message: notification.message || '',
+      duration: notification.duration || 5000,
+      persistent: notification.persistent || false,
+      timestamp: new Date()
+    }
+
+    notifications.value.push(newNotification)
+
+    // Auto-suppression si pas persistante
+    if (!newNotification.persistent && newNotification.duration > 0) {
+      setTimeout(() => {
+        removeNotification(newNotification.id)
+      }, newNotification.duration)
+    }
+
+    return newNotification.id
+  }
+
+  // Supprimer une notification
+  const removeNotification = (id) => {
+    const index = notifications.value.findIndex(n => n.id === id)
+    if (index > -1) {
+      notifications.value.splice(index, 1)
+    }
+  }
+
+  // Supprimer toutes les notifications
+  const clearNotifications = () => {
+    notifications.value = []
+  }
+
+  // Supprimer les notifications par type
+  const removeByType = (type) => {
+    notifications.value = notifications.value.filter(n => n.type !== type)
+  }
+
+  // Méthodes de raccourci pour les types courants
+  const success = (message, options = {}) => {
+    return addNotification({
+      type: 'success',
+      message,
+      ...options
+    })
+  }
+
+  const error = (message, options = {}) => {
+    return addNotification({
+      type: 'error',
+      message,
+      persistent: true, // Les erreurs sont persistantes par défaut
+      ...options
+    })
+  }
+
+  const warning = (message, options = {}) => {
+    return addNotification({
+      type: 'warning',
+      message,
+      ...options
+    })
+  }
+
+  const info = (message, options = {}) => {
+    return addNotification({
+      type: 'info',
+      message,
+      ...options
+    })
+  }
+
+  return {
+    notifications,
+    addNotification,
+    removeNotification,
+    clearNotifications,
+    removeByType,
+    success,
+    error,
+    warning,
+    info
+  }
+})

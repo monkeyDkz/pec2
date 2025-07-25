@@ -1,162 +1,103 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-
-// Auth Views
 import Login from '@/views/auth/Login.vue'
-
-// User Views  
-import UserDashboard from '@/views/user/Dashboard.vue'
-
-// Admin Views
-import AdminDashboard from '@/views/admin/Dashboard.vue'
-
-// Merchant Views (à créer)
-const MerchantDashboard = () => import('@/views/merchant/Dashboard.vue')
+import Register from '@/views/auth/Register.vue'
 
 const routes = [
-  // Routes publiques
-  {
-    path: '/',
-    name: 'Home',
-    component: Home,
-    meta: { requiresAuth: false }
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-    meta: { requiresAuth: false, redirectIfAuth: true }
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: Register,
-    meta: { requiresAuth: false, redirectIfAuth: true }
-  },
+  { path: '/', redirect: '/login' },
+  { path: '/login', component: Login },
+  { path: '/register', component: Register },
+
   {
     path: '/verify-email',
-    name: 'VerifyEmail',
-    component: VerifyEmail,
-    meta: { requiresAuth: false }
-  },
-  {
-    path: '/merchant-selection',
-    name: 'MerchantSelection',
-    component: MerchantSelection,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/apply-merchant',
-    name: 'MerchantApplication',
-    component: MerchantApplication,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/api-test',
-    name: 'ApiTest',
-    component: ApiTest,
-    meta: { requiresAuth: false }
+    component: () => import('@/views/auth/VerifyEmail.vue')
   },
 
-  // Routes Admin
+  // Redirigé après connexion
   {
-    path: '/admin',
-    name: 'AdminDashboard',
-    component: AdminDashboard,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: 'admin',
-      title: 'Administration - Dashboard'
-    }
-  },
-  {
-    path: '/admin/merchant-requests',
-    name: 'AdminMerchantRequests',
-    component: AdminMerchantRequests,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: 'admin',
-      title: 'Administration - Demandes Marchands'
-    }
-  },
-  {
-    path: '/admin/merchants',
-    name: 'AdminMerchantManagement',
-    component: AdminMerchantManagement,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: 'admin',
-      title: 'Administration - Gestion Marchands'
-    }
-  },
-  {
-    path: '/admin/transactions',
-    name: 'AdminTransactionManagement',
-    component: AdminTransactionManagement,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: 'admin',
-      title: 'Administration - Gestion Transactions'
-    }
-  },
-  {
-    path: '/admin/settings',
-    name: 'AdminSettings',
-    component: AdminSettings,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: 'admin',
-      title: 'Administration - Paramètres'
-    }
+    path: '/dashboard',
+    component: () => import('@/views/user/RootDashboard.vue')
   },
 
-  // Routes Merchant
+  // Sous-pages si pas encore rattaché
   {
-    path: '/merchant',
-    name: 'MerchantDashboard',
-    component: MerchantDashboard,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: ['merchant', 'admin'],
-      title: 'Marchand - Dashboard'
-    }
+    path: '/user/merchant-choice',
+    component: () => import('@/views/user/MerchantChoice.vue')
   },
   {
-    path: '/merchant/transactions',
-    name: 'MerchantTransactions',
-    component: MerchantTransactions,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: ['merchant', 'admin'],
-      title: 'Marchand - Transactions'
-    }
+    path: '/user/join-merchant',
+    component: () => import('@/views/user/JoinMerchantRequest.vue')
   },
   {
-    path: '/merchant/settings',
-    name: 'MerchantSettings',
-    component: MerchantSettings,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: ['merchant', 'admin'],
-      title: 'Marchand - Paramètres'
-    }
+    path: '/user/create-merchant',
+    component: () => import('@/views/user/CreateMerchantRequest.vue')
   },
   {
-    path: '/merchant/integration',
-    name: 'MerchantIntegration',
-    component: MerchantIntegration,
-    meta: { 
-      requiresAuth: true, 
-      requiresRole: ['merchant', 'admin'],
-      title: 'Marchand - Intégration'
-    }
+    path: '/user/pending-requests',
+    component: () => import('@/views/user/PendingRequests.vue')
   },
 
-  // Route de fallback
+  // Dashboards spécifiques
   {
-    path: '/:pathMatch(.*)*',
-    redirect: '/'
-  }
+    path: '/admin/dashboard',
+    component: () => import('@/views/admin/Dashboard.vue')
+  },
+  {
+    path: '/merchant/dashboard',
+    component: () => import('@/views/merchant/Dashboard.vue')
+  },
+  {
+  path: '/merchant/:id/members',
+  name: 'MerchantMembers',
+  component: () => import('@/views/merchant/Members.vue')
+},
+{
+  path: '/merchant/:id/credentials',
+  name: 'MerchantCredentials',
+  component: () => import('@/views/merchant/Credentials.vue')
+},
+{
+  path: '/merchant/:id/transactions',
+  name: 'MerchantTransactions',
+  component: () => import('@/views/merchant/Transactions.vue')
+},
+{
+  path: '/merchant/:id/refunds',
+  name: 'MerchantRefunds',
+  component: () => import('@/views/merchant/Refunds.vue')
+},
+{
+  path: '/merchant/:id/edit',
+  name: 'MerchantEdit',
+  component: () => import('@/views/merchant/Edit.vue')
+},
+{
+  path: '/payment/create/:id',
+  name: 'CreateTransaction',
+  component: () => import('@/views/payment/CreateTransaction.vue')
+},
+{
+  path: '/payment/script',
+  name: 'PaymentScript',
+  component: () => import('@/views/payment/PaymentScript.vue')
+},
+{
+  path: '/payment/success',
+  name: 'PaymentSuccess',
+  component: () => import('@/views/payment/PaymentSuccess.vue')
+},
+{
+  path: '/payment/cancel',
+  name: 'PaymentCancel',
+  component: () => import('@/views/payment/PaymentCancel.vue')
+},
+{
+  path: '/payment/config',
+  name: 'PaymentConfig',
+  component: () => import('@/views/payment/PaymentConfig.vue')
+}
+
+
 ]
 
 const router = createRouter({
@@ -164,53 +105,17 @@ const router = createRouter({
   routes
 })
 
-// Guard de navigation
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = store.getters.isAuthenticated
-  const userRole = store.getters.userRole
-  
-  // Mise à jour du titre de la page
-  if (to.meta.title) {
-    document.title = `${to.meta.title} - Payment Platform`
-  } else {
-    document.title = 'Payment Platform'
+// 🧠 Auth Guard pour protéger les routes
+router.beforeEach(async (to, from, next) => {
+  const auth = useAuthStore()
+  if (!auth.user && auth.token) {
+    await auth.fetchProfile()
   }
 
-  // Vérification de l'authentification
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-    return
-  }
+  const isAuth = !!auth.user
 
-  // Redirection si déjà connecté
-  if (to.meta.redirectIfAuth && isAuthenticated) {
-    if (userRole === 'admin') {
-      next('/admin')
-    } else if (userRole === 'merchant') {
-      next('/merchant')
-    } else {
-      next('/')
-    }
-    return
-  }
-
-  // Vérification des rôles
-  if (to.meta.requiresRole && isAuthenticated) {
-    const requiredRoles = Array.isArray(to.meta.requiresRole) 
-      ? to.meta.requiresRole 
-      : [to.meta.requiresRole]
-    
-    if (!requiredRoles.includes(userRole)) {
-      // Redirection vers le dashboard approprié
-      if (userRole === 'admin') {
-        next('/admin')
-      } else if (userRole === 'merchant') {
-        next('/merchant')
-      } else {
-        next('/')
-      }
-      return
-    }
+  if (!isAuth && to.path !== '/login' && to.path !== '/register' && to.path !== '/verify-email') {
+    return next('/login')
   }
 
   next()

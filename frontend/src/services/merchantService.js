@@ -1,47 +1,58 @@
-import apiClient from './api'
+// ✅ src/services/merchantService.js
+import api from './api'
 
 export default {
-  // Dashboard
-  async getDashboardData() {
-    const response = await apiClient.get('/merchants/dashboard')
-    return response.data
+  createRequest(data) {
+    return api.post('/merchants/create-request', {
+      type: 'create_merchant',
+      ...data
+    })
+  },
+  joinRequest(data) {
+    return api.post('/merchants/join-request', {
+      type: 'join_merchant',
+      ...data
+    })
+  },
+  getMyRequests() {
+    return api.get('/merchants/my-requests')
+  },
+  getUserMerchants() {
+    return api.get('/merchants')
+  },
+  getAvailableMerchants() {
+    return api.get('/merchants/available')
+  },
+  getDashboard() {
+    return api.get('/merchants/dashboard')
   },
 
-  // Transactions
-  async getTransactions(params = {}) {
-    const response = await apiClient.get('/merchants/transactions', { params })
-    return response.data
+  // 🔁 Routes spécifiques
+  getMerchantDetails(merchantId) {
+    return api.get(`/merchants/${merchantId}/details`) // ✅ fix ici
   },
-
-  async getTransactionDetails(transactionId) {
-    const response = await apiClient.get(`/merchants/transactions/${transactionId}`)
-    return response.data
+  updateMerchant(merchantId, data) {
+    return api.put(`/merchants/${merchantId}`, data)
   },
-
-  // Settings
-  async updateSettings(settings) {
-    const response = await apiClient.put('/merchants/settings', settings)
-    return response.data
+  getMerchantMembers(merchantId) {
+    return api.get(`/merchants/${merchantId}/members`)
   },
-
-  async getApiKeys() {
-    const response = await apiClient.get('/merchants/api-keys')
-    return response.data
+  getMerchantCredentials(merchantId) {
+    return api.get(`/merchants/${merchantId}/credentials`)
   },
-
-  async regenerateApiKey() {
-    const response = await apiClient.post('/merchants/api-keys/regenerate')
-    return response.data
+  getMerchantTransactions(merchantId) {
+    return api.get(`/merchants/${merchantId}/transactions`)
   },
-
-  // Integration
-  async getIntegrationGuide() {
-    const response = await apiClient.get('/merchants/integration')
-    return response.data
+  getMerchantRefunds(merchantId) {
+    return api.get(`/merchants/${merchantId}/refunds`)
   },
-
-  async testWebhook(webhookUrl) {
-    const response = await apiClient.post('/merchants/webhook/test', { webhookUrl })
-    return response.data
+  regenerateApiKeys(merchantId) {
+    return api.post(`/merchants/${merchantId}/regenerate-keys`)
+  },
+  testWebhook(merchantId) {
+    return api.post(`/merchants/${merchantId}/test-webhook`)
+  },
+  regenerateApiSecret(merchantId) {
+    return api.post(`/merchants/${merchantId}/regenerate-secret`)
   }
 }
